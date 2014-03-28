@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,8 +27,12 @@ public class ItemDetails extends ActionBarActivity {
         Intent intent = getIntent();
         String itemName = intent.getStringExtra(MainStream.ITEM_NAME);
         String itemDescription = intent.getStringExtra(MainStream.ITEM_DESCRIPTION);
+        Long itemDate = intent.getLongExtra(MainStream.ITEM_DATE, 0L);
+        String itemLocation = intent.getStringExtra(MainStream.ITEM_LOCATION);
         ((TextView) findViewById(R.id.item_name)).setText(itemName);;
         ((TextView) findViewById(R.id.item_desc)).setText(itemDescription);
+        ((TextView) findViewById(R.id.desc_date)).setText(DateFormat.format("MM/dd/yyyy hh:mm:ssa", itemDate));
+        ((TextView) findViewById(R.id.desc_loc)).setText(itemLocation);
     }
 
 
