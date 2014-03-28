@@ -1,5 +1,6 @@
 package com.example.reusemobile;
 
+import java.util.Date;
 import java.util.List;
 
 import android.app.Application;
@@ -21,7 +22,7 @@ public class GlobalApplication extends Application {
         if (previousEntries.size() == 0) {
             // Insert new items
             for (String item : items) {
-                (new Item(item, "Short Description")).save();
+                (new Item(item, "Short Description", new Date(), "32-123")).save();
             }
         }
     }
