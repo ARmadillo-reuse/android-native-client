@@ -12,16 +12,41 @@
         android:layout_height="match_parent" >
     </ListView>
     
-    <ListView
-        android:id="@+id/left_drawer"
+    <RelativeLayout 
+        android:id="@+id/drawer_container"
         android:layout_width="240dp"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:background="#111">
-    </ListView>
+        android:background="#ffe6e6e6"
+        android:layout_gravity="start">
+        <ListView
+            android:id="@+id/drawer_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="start"
+            android:background="#fff3f3f3"
+            android:choiceMode="singleChoice">
+        </ListView>
+        <ListView
+            android:id="@+id/drawer_filters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/drawer_top"
+            android:layout_gravity="start"
+            android:background="#fff3f3f3"
+            android:choiceMode="singleChoice">
+        </ListView>
+
+        <ListView 
+            android:id="@+id/drawer_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="start"
+            android:background="#fff3f3f3"
+            android:choiceMode="singleChoice">
+        </ListView>
+    </RelativeLayout>
     
 
 </android.support.v4.widget.DrawerLayout>

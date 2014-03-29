@@ -11,7 +11,8 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class GlobalApplication extends Application {
     
-    private String[] items = {"Item 1", "Item 2", "Item 3"};
+    private String[] items = {"Dell Desktop", "Random electronic shit", "Free Dogecoin!!!"};
+    public static String filterPreferences = "com.example.reuse.filters";
 
     @Override
     public void onCreate() {

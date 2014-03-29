@@ -1,5 +1,8 @@
 package com.example.reusemobile;
 
+import java.util.Set;
+
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -15,8 +18,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.example.reusemobile.model.Item;
+import com.example.reusemobile.views.Drawer;
 import com.roscopeco.ormdroid.Entity;
-
 
 public class MainStream extends ActionBarActivity {
     public final static String ITEM_NAME = "com.example.reusemobile.ITEM_NAME";
@@ -24,16 +27,17 @@ public class MainStream extends ActionBarActivity {
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
     public final static String ITEM_LOCATION = "com.example.reusemobile.ITEM_LOCATION";
     
-    private DrawerLayout mDrawerLayout;
-    private ActionBarDrawerToggle mDrawerToggle;
+    public DrawerLayout mDrawerLayout;
+    public ActionBarDrawerToggle mDrawerToggle;
+    public ListView itemList;
+    public Drawer drawer;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_stream);
-        final ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(this, android.R.layout.simple_list_item_1, Entity.query(Item.class).executeMulti());
-        ListView itemList = (ListView) findViewById(R.id.stream);
-        itemList.setAdapter(adapter);
+        itemList = (ListView) findViewById(R.id.stream);
+        showAll();
         itemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -74,6 +78,8 @@ public class MainStream extends ActionBarActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+        
+        drawer = new Drawer(this);
     }
 
     @Override
@@ -123,4 +129,23 @@ public class MainStream extends ActionBarActivity {
         intent.putExtra(ITEM_LOCATION, item.location);
         startActivity(intent);
     }
+    
+    public void showAll() {
+        final ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(this, android.R.layout.simple_list_item_1, Entity.query(Item.class).executeMulti());
+        itemList.setAdapter(adapter);
+    }
+    
+    public void applyFilter(String filter) {
+        String[] keywords = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
+        StringBuilder whereQuery = new StringBuilder();
+        for (int i = 0; i < keywords.length - 1; i++) {
+            whereQuery.append("name LIKE '%" + keywords[i] + "%' OR ");
+        }
+        whereQuery.append("name LIKE '%" + keywords[keywords.length - 1] + "%'");
+        final ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(this,
+                android.R.layout.simple_list_item_1,
+                Entity.query(Item.class).where(whereQuery.toString()).executeMulti());
+        itemList.setAdapter(adapter);
+    }
+    
 }

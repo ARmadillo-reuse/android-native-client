@@ -43,6 +43,22 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.MainStream" />
         </activity>
+        <activity
+            android:name="com.example.reusemobile.ManageFilters"
+            android:label="@string/title_activity_manage_filters"
+            android:parentActivityName="com.example.reusemobile.MainStream" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.reusemobile.MainStream" />
+        </activity>
+        <activity
+            android:name="com.example.reusemobile.AddFilter"
+            android:label="@string/title_activity_add_filter"
+            android:parentActivityName="com.example.reusemobile.ManageFilters" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.reusemobile.ManageFilters" />
+        </activity>
     </application>
 
 </manifest>
