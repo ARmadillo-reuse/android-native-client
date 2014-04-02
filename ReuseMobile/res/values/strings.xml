@@ -16,6 +16,7 @@
     <string name="post_loc">Location:</string>
     <string name="post_name">Name:</string>
     <string name="post_tags">Tags:</string>
+    <string name="search_hint">Search Reuse items</string>
     <string name="title_activity_item_details">Item Details</string>
     <string name="title_activity_new_post">New Post</string>
     <string name="title_activity_manage_filters">Manage Filters</string>

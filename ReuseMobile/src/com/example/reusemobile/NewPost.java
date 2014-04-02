@@ -1,5 +1,6 @@
 package com.example.reusemobile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
@@ -45,18 +46,23 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         String description = ((TextView) findViewById(R.id.post_desc)).getText().toString();
         String location = ((TextView) findViewById(R.id.post_loc)).getText().toString();
         String tags = ((TextView) findViewById(R.id.post_tags)).getText().toString();
-        ConfirmPost confirmation = new ConfirmPost();
-        confirmation.message = name + "\n\n" +
-                               description + "\n\n" +
-                               location + "\n\n" + 
-                               tags;
-        confirmation.show(getSupportFragmentManager(), "ConfirmPost");
+        if (!name.equals("") && !location.equals("") && !tags.equals("")) {
+            ConfirmPost confirmation = new ConfirmPost();
+            confirmation.message = name + "\n\n" +
+                    description + "\n\n" +
+                    location + "\n\n" + 
+                    tags;
+            confirmation.show(getSupportFragmentManager(), "ConfirmPost");
+        } else {
+            Toast.makeText(this, "Name, location and tags must be filled", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
         // Post item
         Toast.makeText(getApplicationContext(), "Post submitted", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(this, MainStream.class));
     }
 
     @Override

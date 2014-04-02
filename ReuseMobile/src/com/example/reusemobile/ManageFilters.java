@@ -1,5 +1,8 @@
 package com.example.reusemobile;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import android.content.Context;
@@ -24,16 +27,17 @@ public class ManageFilters extends ActionBarActivity implements ConfirmFilterDel
         setContentView(R.layout.activity_manage_filters);
         
         filtersList = (ListView) findViewById(R.id.manage_filters_list);
-        Set<String> filterSet = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getAll().keySet();
-        filtersList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, filterSet.toArray(new String[0])));
+        filtersList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, ManageFilters.getSortedFilters(this)));
         filtersList.setOnItemClickListener(new OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                     int position, long id) {
                 String filter = (String) parent.getItemAtPosition(position);
+                String tags = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "");
                 ConfirmFilterDelete confirm = new ConfirmFilterDelete();
                 confirm.filter = filter;
+                confirm.tags = tags;
                 confirm.show(getSupportFragmentManager(), "ConfirmFilterDelete");
             }
         });
@@ -77,5 +81,16 @@ public class ManageFilters extends ActionBarActivity implements ConfirmFilterDel
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
         // Do nothing
+    }
+    
+    private static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+      List<T> list = new ArrayList<T>(c);
+      java.util.Collections.sort(list);
+      return list;
+    }
+    
+    public static List<String> getSortedFilters(Context context) {
+        Set<String> filterSet = context.getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getAll().keySet();
+        return asSortedList(filterSet);
     }
 }

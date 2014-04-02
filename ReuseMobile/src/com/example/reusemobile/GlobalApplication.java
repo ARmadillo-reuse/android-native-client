@@ -11,7 +11,10 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class GlobalApplication extends Application {
     
-    private String[] items = {"Dell Desktop", "Random electronic shit", "Free Dogecoin!!!"};
+    private String[] items = {"Dell Desktop", "Random electronic stuff", "Free Dogecoin!!!"};
+    private String[] descriptions = {"An old dell desktop. Missing HDD. Please take all.",
+                                     "Box of random electric things. Floppy disks galore!",
+                                     "Come see me if you want some free dogecoin. Much currency. Such value. Wow!"};
     public static String filterPreferences = "com.example.reuse.filters";
 
     @Override
@@ -22,8 +25,8 @@ public class GlobalApplication extends Application {
         List<Item> previousEntries = Entity.query(Item.class).executeMulti();
         if (previousEntries.size() == 0) {
             // Insert new items
-            for (String item : items) {
-                (new Item(item, "Short Description", new Date(), "32-123")).save();
+            for (int i = 0; i < 3; i++) {
+                (new Item(items[i], descriptions[i], new Date(), "32-123")).save();
             }
         }
     }
