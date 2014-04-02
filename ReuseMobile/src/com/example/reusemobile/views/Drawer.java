@@ -33,9 +33,12 @@ public class Drawer{
         header.setAdapter(new ArrayAdapter<String>(activity, android.R.layout.simple_list_item_1, top));
         TextView filterHeader = new TextView(activity);
         filterHeader.setText(activity.getResources().getString(R.string.drawer_filter_header));
-        filters.addHeaderView(filterHeader, "Filters", false);
+        filters.addHeaderView(filterHeader, activity.getResources().getString(R.string.drawer_filter_header), false);
 
         updateFilters();
+        TextView footerHeader = new TextView(activity);
+        footerHeader.setText(activity.getResources().getString(R.string.drawer_footer_header));
+        footer.addHeaderView(footerHeader, activity.getResources().getString(R.string.drawer_footer_header), false);
         footer.setAdapter(new ArrayAdapter<String>(activity, android.R.layout.simple_list_item_1, settings));
         
         header.setOnItemClickListener(new OnItemClickListener() {

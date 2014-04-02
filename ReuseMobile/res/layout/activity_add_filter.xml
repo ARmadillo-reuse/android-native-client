@@ -29,7 +29,7 @@
         android:id="@+id/new_filter_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/new_filter_keywords"
         android:layout_centerHorizontal="true"
         android:onClick="create"
         android:text="Create" />

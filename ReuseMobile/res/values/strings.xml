@@ -8,6 +8,7 @@
     <string name="drawer_all">All Items</string>
     <string name="drawer_close">Close</string>
     <string name="drawer_filter_header">Filters</string>
+    <string name="drawer_footer_header">General Settings</string>
     <string name="drawer_manage">Manage Filters</string>
     <string name="drawer_new">New Post</string>
     <string name="drawer_open">Open</string>

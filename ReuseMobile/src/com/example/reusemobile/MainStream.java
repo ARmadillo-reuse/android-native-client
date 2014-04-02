@@ -17,6 +17,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
+import android.text.TextUtils.TruncateAt;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -25,6 +26,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 
 import com.example.reusemobile.model.Item;
 import com.example.reusemobile.views.Drawer;
@@ -178,7 +180,18 @@ public class MainStream extends ActionBarActivity {
                                                   android.R.layout.simple_list_item_2,
                                                   new String[] {"name", "description"},
                                                   new int[] {android.R.id.text1,
-                                                             android.R.id.text2});
+                                                             android.R.id.text2}) {
+
+                                                                @Override
+                                                                public void setViewText(
+                                                                        TextView v,
+                                                                        String text) {
+                                                                    v.setMaxLines(2);
+                                                                    v.setEllipsize(TruncateAt.END);
+                                                                    super.setViewText(v, text);
+                                                                }
+            
+        };
         itemList.setAdapter(adapter);
     }
     
@@ -194,7 +207,20 @@ public class MainStream extends ActionBarActivity {
                                                   android.R.layout.simple_list_item_2,
                                                   new String[] {"name", "description"},
                                                   new int[] {android.R.id.text1,
-                                                             android.R.id.text2});
+                                                             android.R.id.text2}) {
+
+                                                                @Override
+                                                                public void setViewText(
+                                                                        TextView v,
+                                                                        String text) {
+                                                                    // TODO Auto-generated method stub
+                                                                    v.setMaxLines(2);
+                                                                    v.setEllipsize(TruncateAt.END);
+                                                                    super.setViewText(v, text);
+                                                                }
+            
+            
+        };
         itemList.setAdapter(adapter);
     }
     
