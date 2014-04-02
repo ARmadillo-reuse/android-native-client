@@ -9,6 +9,7 @@ import android.support.v4.app.DialogFragment;
 
 public class ConfirmFilterDelete extends DialogFragment {
     public String filter;
+    public String tags;
     
     public interface ConfirmFilterDeleteListener {
         public void onDialogPositiveClick(DialogFragment dialog, String filter);
@@ -37,7 +38,8 @@ public class ConfirmFilterDelete extends DialogFragment {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Confirm Filter Delete")
-               .setMessage("Are you sure you want to delete filter:\n\n" + filter)
+               .setMessage("Are you sure you want to delete filter:\n\n" + filter + "\n\n" +
+                           "With tags:\n" + tags)
                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
                        mListener.onDialogPositiveClick(ConfirmFilterDelete.this, filter);

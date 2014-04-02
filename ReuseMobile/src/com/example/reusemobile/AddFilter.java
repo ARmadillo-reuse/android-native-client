@@ -3,13 +3,10 @@ package com.example.reusemobile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -51,7 +48,7 @@ public class AddFilter extends ActionBarActivity {
 
     public void create(View view) {
         String name = nameEdit.getText().toString();
-        String[] keywords = keywordsEdit.getText().toString().split(" ");
+        String[] keywords = keywordsEdit.getText().toString().trim().split(" ");
         if (!name.equals("") && keywords.length > 0) {
             addFilter(name, keywords);
             startActivity(new Intent(this, ManageFilters.class));
@@ -65,6 +62,6 @@ public class AddFilter extends ActionBarActivity {
         for (String filter : keywords) {
             value.append(filter).append(' ');
         }
-        getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).edit().putString(name, value.toString()).commit();
+        getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).edit().putString(name, value.toString().trim()).commit();
     }
 }

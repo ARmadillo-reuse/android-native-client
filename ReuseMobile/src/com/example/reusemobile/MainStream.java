@@ -1,25 +1,36 @@
 package com.example.reusemobile;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import android.app.SearchManager;
+import android.app.SearchableInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.SearchView;
+import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 
 import com.example.reusemobile.model.Item;
 import com.example.reusemobile.views.Drawer;
 import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.roscopeco.ormdroid.TypeMapper;
 
 public class MainStream extends ActionBarActivity {
     public final static String ITEM_NAME = "com.example.reusemobile.ITEM_NAME";
@@ -37,13 +48,18 @@ public class MainStream extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_stream);
         itemList = (ListView) findViewById(R.id.stream);
-        showAll();
+        drawer = new Drawer(this);
+        
+        // Check if intent was a search
+        Intent intent = getIntent();
+        handleIntent(intent);
         itemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                 int position, long id) {
-                final Item item = (Item) parent.getItemAtPosition(position);
+                @SuppressWarnings("unchecked")
+                final Item item = (Item) ((Map<String, Object>) parent.getItemAtPosition(position)).get("item");
                 displayItemDetails(item);
             }
 
@@ -78,14 +94,34 @@ public class MainStream extends ActionBarActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
-        
-        drawer = new Drawer(this);
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ( keyCode == KeyEvent.KEYCODE_MENU ) {
+            if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
+                // Close the drawer
+                mDrawerLayout.closeDrawers();
+            } else {
+                // Open the drawer
+                mDrawerLayout.openDrawer(Gravity.LEFT);
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_stream, menu);
+        
+        // Get the SearchView and set the searchable configuration
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
+        // Assumes current activity is the searchable activity
+        SearchableInfo searchInfo = searchManager.getSearchableInfo(getComponentName());
+        searchView.setSearchableInfo(searchInfo);
         return true;
     }
     
@@ -98,7 +134,6 @@ public class MainStream extends ActionBarActivity {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.action_search:
-                //openSearch();
                 return true;
             case R.id.action_settings:
                 return super.onOptionsItemSelected(item);
@@ -121,6 +156,12 @@ public class MainStream extends ActionBarActivity {
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
     
+    @Override
+    protected void onNewIntent(Intent intent) {
+        setIntent(intent);
+        handleIntent(intent);
+    }
+    
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
         intent.putExtra(ITEM_NAME, item.name);
@@ -131,21 +172,75 @@ public class MainStream extends ActionBarActivity {
     }
     
     public void showAll() {
-        final ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(this, android.R.layout.simple_list_item_1, Entity.query(Item.class).executeMulti());
+        setTitle("All Items");
+        List<Map<String, Object>> data = getItems();
+        SimpleAdapter adapter = new SimpleAdapter(this, data,
+                                                  android.R.layout.simple_list_item_2,
+                                                  new String[] {"name", "description"},
+                                                  new int[] {android.R.id.text1,
+                                                             android.R.id.text2});
         itemList.setAdapter(adapter);
     }
     
     public void applyFilter(String filter) {
         String[] keywords = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
-        StringBuilder whereQuery = new StringBuilder();
-        for (int i = 0; i < keywords.length - 1; i++) {
-            whereQuery.append("name LIKE '%" + keywords[i] + "%' OR ");
-        }
-        whereQuery.append("name LIKE '%" + keywords[keywords.length - 1] + "%'");
-        final ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(this,
-                android.R.layout.simple_list_item_1,
-                Entity.query(Item.class).where(whereQuery.toString()).executeMulti());
+        queryForKeywordsAndApply(keywords);
+    }
+    
+    private void queryForKeywordsAndApply(String[] keywords) {
+        setTitle("Filtered Items");
+        List<Map<String, Object>> data = getItems(keywords);
+        SimpleAdapter adapter = new SimpleAdapter(this, data,
+                                                  android.R.layout.simple_list_item_2,
+                                                  new String[] {"name", "description"},
+                                                  new int[] {android.R.id.text1,
+                                                             android.R.id.text2});
         itemList.setAdapter(adapter);
     }
     
+    private List<Map<String, Object>> getItems() {
+        return getItems(null);
+    }
+    
+    private List<Map<String, Object>> getItems(String[] keywords) {
+        List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
+        
+        // No keywords
+        if (keywords == null) {
+            for (Item item : Entity.query(Item.class).executeMulti()) {
+                Map<String, Object> datum = new HashMap<String, Object>(3);
+                datum.put("name", item.name);
+                datum.put("description", item.description);
+                datum.put("item", item);
+                data.add(datum);
+            }
+        } else {
+            StringBuilder whereQuery = new StringBuilder();
+            for (int i = 0; i < keywords.length - 1; i++) {
+                whereQuery.append("name LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
+                whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
+            }
+            whereQuery.append("name LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
+            whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
+            for (Item item : Entity.query(Item.class).where(whereQuery.toString()).executeMulti()) {
+                Map<String, Object> datum = new HashMap<String, Object>(3);
+                datum.put("name", item.name);
+                datum.put("description", item.description);
+                datum.put("item", item);
+                data.add(datum);
+            }
+        }
+        
+        return data;
+    }
+    
+    private void handleIntent(Intent intent) {
+        drawer.updateFilters();
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            queryForKeywordsAndApply(query.trim().split(" "));
+        } else {
+            showAll();
+        }
+    }
 }
