@@ -12,8 +12,9 @@
         android:layout_height="match_parent" >
     </ListView>
     
-    <RelativeLayout 
+    <LinearLayout
         android:id="@+id/drawer_container"
+        android:orientation="vertical"
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:background="#ffe6e6e6"
@@ -22,7 +23,6 @@
             android:id="@+id/drawer_top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
             android:layout_gravity="start"
             android:background="#fff3f3f3"
             android:choiceMode="singleChoice">
@@ -30,8 +30,8 @@
         <ListView
             android:id="@+id/drawer_filters"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/drawer_top"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:layout_gravity="start"
             android:background="#fff3f3f3"
             android:choiceMode="singleChoice">
@@ -41,12 +41,11 @@
             android:id="@+id/drawer_footer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
             android:layout_gravity="start"
             android:background="#fff3f3f3"
             android:choiceMode="singleChoice">
         </ListView>
-    </RelativeLayout>
+    </LinearLayout>
     
 
 </android.support.v4.widget.DrawerLayout>
