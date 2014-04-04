@@ -180,14 +180,16 @@ public class MainStream extends ActionBarActivity {
         
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.action_search:
-                return true;
-            case R.id.action_settings:
-                return super.onOptionsItemSelected(item);
-            case R.id.action_new_post:
-                startActivity(new Intent(this, NewPost.class));
-            default:
-                return super.onOptionsItemSelected(item);
+        case R.id.action_map_view:
+            return true;
+        case R.id.action_search:
+            return true;
+        case R.id.action_settings:
+            return super.onOptionsItemSelected(item);
+        case R.id.action_new_post:
+            startActivity(new Intent(this, NewPost.class));
+        default:
+            return super.onOptionsItemSelected(item);
         }
     }
     
