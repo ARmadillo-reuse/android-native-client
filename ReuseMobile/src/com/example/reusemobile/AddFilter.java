@@ -52,6 +52,7 @@ public class AddFilter extends ActionBarActivity {
         if (!name.equals("") && keywords.length > 0) {
             addFilter(name, keywords);
             startActivity(new Intent(this, ManageFilters.class));
+            finish();
         } else {
             Toast.makeText(this, "Name and keywords must be filled", Toast.LENGTH_SHORT).show();
         }

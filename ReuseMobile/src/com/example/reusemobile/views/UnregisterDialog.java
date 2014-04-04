@@ -1,5 +1,6 @@
 package com.example.reusemobile.views;
 
+import android.app.Activity;
 import android.content.Context;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
@@ -18,6 +19,8 @@ public class UnregisterDialog extends DialogPreference {
         if(positiveResult) {
             // Unregister User
             PreferenceManager.getDefaultSharedPreferences(context).edit().remove("username").commit();
+            PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean("isVerified", false).commit();
+            ((Activity) context).finish();
         } else {
             // Do nothing
         }

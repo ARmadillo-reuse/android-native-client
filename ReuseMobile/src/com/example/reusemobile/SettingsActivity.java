@@ -47,6 +47,15 @@ public class SettingsActivity extends PreferenceActivity {
         setupActionBar();
     }
 
+    @Override
+    protected void onResume() {
+        // TODO Auto-generated method stub
+        super.onResume();
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+            finish(); // Go to parent activity
+        }
+    }
+
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */

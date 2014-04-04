@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -48,6 +49,13 @@ public class MainStream extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Check if user is verified
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+            startActivity(new Intent(this, CreateAccount.class));
+            finish();
+        }
+        
         setContentView(R.layout.activity_main_stream);
         itemList = (ListView) findViewById(R.id.stream);
         drawer = new Drawer(this);
@@ -96,6 +104,16 @@ public class MainStream extends ActionBarActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check if user is verified
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+            startActivity(new Intent(this, CreateAccount.class));
+            finish();
+        }
     }
     
     @Override
