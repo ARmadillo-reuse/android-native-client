@@ -20,6 +20,7 @@ public class GlobalApplication extends Application {
     private String[] tags = {"computer desktop dell",
                              "capacitors floppy disks wires",
                              "dogecoin wow"};
+    private String[] locations = {"32-123", "10-250", "16-676"};
     private Boolean[] available = {true, true, false};
     
     public static String filterPreferences = "com.example.reuse.filters";
@@ -33,7 +34,7 @@ public class GlobalApplication extends Application {
         if (previousEntries.size() == 0) {
             // Insert new items
             for (int i = 0; i < 3; i++) {
-                (new Item(items[i], descriptions[i], new Date(), "32-123", tags[i], available[i])).save();
+                (new Item(items[i], descriptions[i], new Date(), locations[i], tags[i], available[i])).save();
             }
         }
         
