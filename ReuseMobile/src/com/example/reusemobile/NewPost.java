@@ -63,6 +63,7 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         // Post item
         Toast.makeText(getApplicationContext(), "Post submitted", Toast.LENGTH_SHORT).show();
         startActivity(new Intent(this, MainStream.class));
+        finish();
     }
 
     @Override

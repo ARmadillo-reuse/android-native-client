@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="post_desc">Description:\n(Optional)</string>
+    <string name="post_loc">Location:</string>
+    <string name="post_name">Name:</string>
+    <string name="post_tags">Tags:</string>
+
+</resources>

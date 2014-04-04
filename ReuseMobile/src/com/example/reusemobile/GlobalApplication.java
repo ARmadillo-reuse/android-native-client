@@ -2,6 +2,8 @@ package com.example.reusemobile;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Application;
 
@@ -18,6 +20,7 @@ public class GlobalApplication extends Application {
     private String[] tags = {"computer desktop dell",
                              "capacitors floppy disks wires",
                              "dogecoin wow"};
+    private Boolean[] available = {true, true, false};
     
     public static String filterPreferences = "com.example.reuse.filters";
 
@@ -30,8 +33,24 @@ public class GlobalApplication extends Application {
         if (previousEntries.size() == 0) {
             // Insert new items
             for (int i = 0; i < 3; i++) {
-                (new Item(items[i], descriptions[i], new Date(), "32-123", tags[i])).save();
+                (new Item(items[i], descriptions[i], new Date(), "32-123", tags[i], available[i])).save();
             }
         }
+        
+        // Create db cleaner
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            
+            @Override
+            public void run() {
+                for(Item item : Entity.query(Item.class).executeMulti()) {
+                    long elapsedMins = (new Date().getTime() - item.date.getTime()) / 60000;
+                    if(!item.isAvailable && elapsedMins > 30) {
+                        item.delete();
+                    }
+                }
+            }
+        };
+        timer.schedule(task, 0, 60 * 1000); // Check every minute
     }
 }

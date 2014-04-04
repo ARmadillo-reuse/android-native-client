@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<string name="create_greeting">Welcome to Reuse mobile!</string>
+	<string name="create_email_hint">Enter your MIT email address</string>
+	<string name="create_button_label">Sign up</string>
+
+</resources>

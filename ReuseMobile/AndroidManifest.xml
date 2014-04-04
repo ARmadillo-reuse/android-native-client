@@ -75,6 +75,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.MainStream" />
         </activity>
+        <activity
+            android:name="com.example.reusemobile.CreateAccount"
+            android:label="@string/title_activity_create_account" >
+        </activity>
     </application>
 
 </manifest>

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.SearchManager;
 import android.app.SearchableInfo;
@@ -11,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -39,15 +42,39 @@ public class MainStream extends ActionBarActivity {
     public final static String ITEM_DESCRIPTION = "com.example.reusemobile.ITEM_DESCRIPTION";
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
     public final static String ITEM_LOCATION = "com.example.reusemobile.ITEM_LOCATION";
+    public final static String ITEM_AVAILABLE = "com.example.reusemobile.ITEM_AVAILABLE";
     
     public DrawerLayout mDrawerLayout;
     public ActionBarDrawerToggle mDrawerToggle;
     public ListView itemList;
     public Drawer drawer;
     
+    private String[] currentFilters;
+    private Timer timer = new Timer();
+    private int updateInterval = 30 * 1000;
+    private TimerTask task = new TimerTask() {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    refreshItems();
+                }
+            });
+
+        }
+    };
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Check if user is verified
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+            startActivity(new Intent(this, CreateAccount.class));
+            finish();
+        }
+        
         setContentView(R.layout.activity_main_stream);
         itemList = (ListView) findViewById(R.id.stream);
         drawer = new Drawer(this);
@@ -96,6 +123,24 @@ public class MainStream extends ActionBarActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
+        
+        // Set a timer to update itemList
+        timer.schedule(task, 0, updateInterval); // Update every 30 seconds
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check if user is verified
+        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+            startActivity(new Intent(this, CreateAccount.class));
+            finish();
+        }
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
     
     @Override
@@ -170,39 +215,28 @@ public class MainStream extends ActionBarActivity {
         intent.putExtra(ITEM_DESCRIPTION, item.description);
         intent.putExtra(ITEM_DATE, item.date.getTime());
         intent.putExtra(ITEM_LOCATION, item.location);
+        intent.putExtra(ITEM_AVAILABLE, item.isAvailable);
         startActivity(intent);
     }
     
     public void showAll() {
-        setTitle("All Items");
-        List<Map<String, Object>> data = getItems();
-        SimpleAdapter adapter = new SimpleAdapter(this, data,
-                                                  android.R.layout.simple_list_item_2,
-                                                  new String[] {"name", "description"},
-                                                  new int[] {android.R.id.text1,
-                                                             android.R.id.text2}) {
-
-                                                                @Override
-                                                                public void setViewText(
-                                                                        TextView v,
-                                                                        String text) {
-                                                                    v.setMaxLines(2);
-                                                                    v.setEllipsize(TruncateAt.END);
-                                                                    super.setViewText(v, text);
-                                                                }
-            
-        };
-        itemList.setAdapter(adapter);
+        currentFilters = new String[0];
+        refreshItems();
     }
     
     public void applyFilter(String filter) {
         String[] keywords = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
-        queryForKeywordsAndApply(keywords);
+        currentFilters = keywords;
+        refreshItems();
     }
     
-    private void queryForKeywordsAndApply(String[] keywords) {
-        setTitle("Filtered Items");
-        List<Map<String, Object>> data = getItems(keywords);
+    private void refreshItems() {
+        if (currentFilters.length == 0) {
+            setTitle("All Items");
+        } else {
+            setTitle("Filtered Items");
+        }
+        List<Map<String, Object>> data = getItems(currentFilters);
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                                                   android.R.layout.simple_list_item_2,
                                                   new String[] {"name", "description"},
@@ -224,15 +258,11 @@ public class MainStream extends ActionBarActivity {
         itemList.setAdapter(adapter);
     }
     
-    private List<Map<String, Object>> getItems() {
-        return getItems(null);
-    }
-    
     private List<Map<String, Object>> getItems(String[] keywords) {
         List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
         
         // No keywords
-        if (keywords == null) {
+        if (keywords.length == 0) {
             for (Item item : Entity.query(Item.class).executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
@@ -264,7 +294,8 @@ public class MainStream extends ActionBarActivity {
         drawer.updateFilters();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            queryForKeywordsAndApply(query.trim().split(" "));
+            currentFilters = query.trim().split(" ");
+            refreshItems();
         } else {
             showAll();
         }

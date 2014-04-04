@@ -1,0 +1,42 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    tools:context="com.example.reusemobile.CreateAccount"
+    tools:ignore="MergeRootFrame" >
+
+    <TextView
+        android:id="@+id/create_account_greeting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:text="@string/create_greeting"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <EditText
+        android:id="@+id/create_account_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/create_account_greeting"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:ems="10"
+        android:hint="@string/create_email_hint"
+        android:inputType="textEmailAddress" />
+
+    <Button
+        android:id="@+id/create_account_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/create_account_email"
+        android:layout_centerHorizontal="true"
+        android:onClick="createAccount"
+        android:text="@string/create_button_label" />
+
+</RelativeLayout>
