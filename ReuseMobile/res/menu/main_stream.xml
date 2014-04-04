@@ -9,6 +9,12 @@
         app:actionViewClass="android.support.v7.widget.SearchView"/>
     
     <item 
+        android:id="@+id/action_map_view"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_map_view"
+        android:icon="@drawable/ic_action_place"/>
+    
+    <item 
         android:id="@+id/action_new_post"
         app:showAsAction="ifRoom"
         android:title="@string/action_new_post"

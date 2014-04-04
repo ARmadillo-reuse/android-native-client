@@ -43,6 +43,7 @@ public class MainStream extends ActionBarActivity {
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
     public final static String ITEM_LOCATION = "com.example.reusemobile.ITEM_LOCATION";
     public final static String ITEM_AVAILABLE = "com.example.reusemobile.ITEM_AVAILABLE";
+    public final static String FILTERS = "com.example.reusemobile.FILTERS";
     
     public DrawerLayout mDrawerLayout;
     public ActionBarDrawerToggle mDrawerToggle;
@@ -180,14 +181,19 @@ public class MainStream extends ActionBarActivity {
         
         // Handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.action_search:
-                return true;
-            case R.id.action_settings:
-                return super.onOptionsItemSelected(item);
-            case R.id.action_new_post:
-                startActivity(new Intent(this, NewPost.class));
-            default:
-                return super.onOptionsItemSelected(item);
+        case R.id.action_map_view:
+            Intent intent = new Intent(this, MapView.class);
+            intent.putExtra(FILTERS, currentFilters);
+            startActivity(intent);
+            return true;
+        case R.id.action_search:
+            return true;
+        case R.id.action_settings:
+            return super.onOptionsItemSelected(item);
+        case R.id.action_new_post:
+            startActivity(new Intent(this, NewPost.class));
+        default:
+            return super.onOptionsItemSelected(item);
         }
     }
     
@@ -258,7 +264,7 @@ public class MainStream extends ActionBarActivity {
         itemList.setAdapter(adapter);
     }
     
-    private List<Map<String, Object>> getItems(String[] keywords) {
+    public static List<Map<String, Object>> getItems(String[] keywords) {
         List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
         
         // No keywords
