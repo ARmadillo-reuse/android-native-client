@@ -1,5 +1,9 @@
 package com.example.reusemobile;
 
+import com.example.reusemobile.model.Item;
+import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.Query;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,9 +14,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class ItemDetails extends ActionBarActivity {
+    private TextView nameField;
+    private TextView descField;
+    private TextView dateField;
+    private TextView locField;
+    private Button claimButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,15 +34,26 @@ public class ItemDetails extends ActionBarActivity {
                     .add(R.id.container, new PlaceholderFragment()).commit();
         }
         
+        nameField = (TextView) findViewById(R.id.item_name);
+        descField = (TextView) findViewById(R.id.item_desc);
+        dateField = (TextView) findViewById(R.id.desc_date);
+        locField = (TextView) findViewById(R.id.desc_loc);
+        claimButton = (Button) findViewById(R.id.claim_button);
+        
         Intent intent = getIntent();
         String itemName = intent.getStringExtra(MainStream.ITEM_NAME);
         String itemDescription = intent.getStringExtra(MainStream.ITEM_DESCRIPTION);
         Long itemDate = intent.getLongExtra(MainStream.ITEM_DATE, 0L);
         String itemLocation = intent.getStringExtra(MainStream.ITEM_LOCATION);
-        ((TextView) findViewById(R.id.item_name)).setText(itemName);;
-        ((TextView) findViewById(R.id.item_desc)).setText(itemDescription);
-        ((TextView) findViewById(R.id.desc_date)).setText(DateFormat.format("MM/dd/yyyy hh:mm:ssa", itemDate));
-        ((TextView) findViewById(R.id.desc_loc)).setText(itemLocation);
+        Boolean itemAvailable = intent.getBooleanExtra(MainStream.ITEM_AVAILABLE, false);
+        nameField.setText(itemName);
+        descField.setText(itemDescription);
+        dateField.setText(DateFormat.format("MM/dd/yyyy hh:mm:ssa", itemDate));
+        locField.setText(itemLocation);
+        if(!itemAvailable) {
+            claimButton.setEnabled(false);
+            claimButton.setText("Claimed");
+        }
     }
 
 
@@ -58,6 +79,11 @@ public class ItemDetails extends ActionBarActivity {
     
     public void claim(View view) {
         // Process claim action
+        //REMOVEME
+        Item item = Entity.query(Item.class).where(Query.and(Query.eql("name", nameField.getText()), Query.eql("description", descField.getText()))).execute();
+        item.markAsClaimed();
+        claimButton.setEnabled(false);
+        claimButton.setText("Claimed");
     }
 
     /**
