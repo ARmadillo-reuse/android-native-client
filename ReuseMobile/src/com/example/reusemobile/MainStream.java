@@ -45,6 +45,7 @@ import com.roscopeco.ormdroid.TypeMapper;
 public class MainStream extends ActionBarActivity {
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     
+    public final static String ITEM_ID = "com.example.reusemobile.ID";
     public final static String ITEM_NAME = "com.example.reusemobile.ITEM_NAME";
     public final static String ITEM_DESCRIPTION = "com.example.reusemobile.ITEM_DESCRIPTION";
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
@@ -72,7 +73,7 @@ public class MainStream extends ActionBarActivity {
 
         }
     };
-    private int pullInterval = 60 * 1000;
+    private int pullInterval = 30 * 60 * 1000;
     private TimerTask pullFromServerTask = new TimerTask() {
         @Override
         public void run() {
@@ -243,6 +244,7 @@ public class MainStream extends ActionBarActivity {
     
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
+        intent.putExtra(ITEM_ID, item.id);
         intent.putExtra(ITEM_NAME, item.name);
         intent.putExtra(ITEM_DESCRIPTION, item.description);
         intent.putExtra(ITEM_DATE, item.date.getTime());
@@ -336,15 +338,14 @@ public class MainStream extends ActionBarActivity {
     private void pullFromServerAndUpdate() {
         // Pull from server
         List<Item> itemUpdates = new ArrayList<Item>();
-        itemUpdates.add(new Item("Refrigerator", "It's a broken refrigerator", new Date(), "32-044", "appliance", true));
+        itemUpdates.add(new Item(4, "Refrigerator", "It's a broken refrigerator", new Date(), "32-044", "appliance", true));
         
         // Update
         for (Item item : itemUpdates) {
-            String name = item.name;
-            String desc = item.description;
-            Item storedItem = Entity.query(Item.class).where(Query.and(Query.eql("name", name), Query.eql("description", desc))).execute();
+            Item storedItem = Entity.query(Item.class).where(Query.eql("id", item.id)).execute();
             if(storedItem != null) {
                 storedItem.isAvailable = item.isAvailable;
+                storedItem.date = item.date;
                 storedItem.save();
             } else {
                 // Add new item

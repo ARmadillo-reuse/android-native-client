@@ -13,6 +13,7 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class GlobalApplication extends Application {
     
+    private Integer[] ids = {1, 2, 3};
     private String[] items = {"Dell Desktop", "Random electronic stuff", "Free Dogecoin!!!"};
     private String[] descriptions = {"An old dell desktop. Missing HDD. Please take all.",
                                      "Box of random electric things. Floppy disks galore!",
@@ -34,7 +35,7 @@ public class GlobalApplication extends Application {
         if (previousEntries.size() == 0) {
             // Insert new items
             for (int i = 0; i < 3; i++) {
-                (new Item(items[i], descriptions[i], new Date(), locations[i], tags[i], available[i])).save();
+                (new Item(ids[i], items[i], descriptions[i], new Date(), locations[i], tags[i], available[i])).save();
             }
         }
         
