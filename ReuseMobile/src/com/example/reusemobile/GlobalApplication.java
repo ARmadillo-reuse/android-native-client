@@ -21,7 +21,7 @@ public class GlobalApplication extends Application {
                              "capacitors floppy disks wires",
                              "dogecoin wow"};
     private String[] locations = {"32-123", "10-250", "16-676"};
-    private Boolean[] available = {true, true, false};
+    private Boolean[] available = {true, true, true};
     
     public static String filterPreferences = "com.example.reuse.filters";
 

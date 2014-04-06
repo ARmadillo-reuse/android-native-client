@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -13,11 +14,15 @@ import android.view.MenuItem;
 import com.example.reusemobile.model.Item;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.Query;
 
-public class MapView extends ActionBarActivity {
+public class MapView extends ActionBarActivity  {
     private Map<String, LatLng> buildingLocations;
 
     @Override
@@ -33,7 +38,7 @@ public class MapView extends ActionBarActivity {
         // Get a handle to the Map Fragment
         GoogleMap map = ((SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map)).getMap();
-
+        
         LatLng mit = new LatLng(42.358953, -71.091634);
         
         // Get all filters from stream
@@ -47,6 +52,16 @@ public class MapView extends ActionBarActivity {
 
         map.setMyLocationEnabled(true);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(mit, 15));
+        map.setOnInfoWindowClickListener(new OnInfoWindowClickListener() {
+            
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                String name = marker.getTitle();
+                String desc = marker.getSnippet();
+                Item item = Entity.query(Item.class).where(Query.eql("description", desc)).execute();
+                displayItemDetails(item);
+            }
+        });
 
         // Add markers for each active item
         for(Item item : itemList) {
@@ -78,6 +93,16 @@ public class MapView extends ActionBarActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+    private void displayItemDetails(Item item) {
+        Intent intent = new Intent(this, ItemDetails.class);
+        intent.putExtra(MainStream.ITEM_NAME, item.name);
+        intent.putExtra(MainStream.ITEM_DESCRIPTION, item.description);
+        intent.putExtra(MainStream.ITEM_DATE, item.date.getTime());
+        intent.putExtra(MainStream.ITEM_LOCATION, item.location);
+        intent.putExtra(MainStream.ITEM_AVAILABLE, item.isAvailable);
+        startActivity(intent);
     }
 
 }

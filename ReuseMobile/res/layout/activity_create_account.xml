@@ -18,25 +18,39 @@
         android:text="@string/create_greeting"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/create_account_greeting"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/ic_logo" />
+
+    <Button
+        android:id="@+id/create_account_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/create_account_email"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:onClick="createAccount"
+        android:text="@string/create_button_label" />
+
     <EditText
         android:id="@+id/create_account_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/create_account_greeting"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="10dp"
+        android:layout_below="@+id/imageView1"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="30dp"
         android:ems="10"
         android:hint="@string/create_email_hint"
-        android:inputType="textEmailAddress" />
+        android:inputType="textEmailAddress" >
 
-    <Button
-        android:id="@+id/create_account_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/create_account_email"
-        android:layout_centerHorizontal="true"
-        android:onClick="createAccount"
-        android:text="@string/create_button_label" />
+        <requestFocus />
+    </EditText>
 
 </RelativeLayout>

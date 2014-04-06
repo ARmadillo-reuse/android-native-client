@@ -1,6 +1,7 @@
 package com.example.reusemobile;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils.TruncateAt;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -33,11 +35,16 @@ import android.widget.TextView;
 
 import com.example.reusemobile.model.Item;
 import com.example.reusemobile.views.Drawer;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.roscopeco.ormdroid.Query;
 import com.roscopeco.ormdroid.TypeMapper;
 
 public class MainStream extends ActionBarActivity {
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    
     public final static String ITEM_NAME = "com.example.reusemobile.ITEM_NAME";
     public final static String ITEM_DESCRIPTION = "com.example.reusemobile.ITEM_DESCRIPTION";
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
@@ -53,13 +60,26 @@ public class MainStream extends ActionBarActivity {
     private String[] currentFilters;
     private Timer timer = new Timer();
     private int updateInterval = 30 * 1000;
-    private TimerTask task = new TimerTask() {
+    private TimerTask refreshTask = new TimerTask() {
         @Override
         public void run() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     refreshItems();
+                }
+            });
+
+        }
+    };
+    private int pullInterval = 60 * 1000;
+    private TimerTask pullFromServerTask = new TimerTask() {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    pullFromServerAndUpdate();
                 }
             });
 
@@ -77,65 +97,71 @@ public class MainStream extends ActionBarActivity {
         }
         
         setContentView(R.layout.activity_main_stream);
-        itemList = (ListView) findViewById(R.id.stream);
-        drawer = new Drawer(this);
         
-        // Check if intent was a search
-        Intent intent = getIntent();
-        handleIntent(intent);
-        itemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, final View view,
-                int position, long id) {
-                @SuppressWarnings("unchecked")
-                final Item item = (Item) ((Map<String, Object>) parent.getItemAtPosition(position)).get("item");
-                displayItemDetails(item);
-            }
-
-          });
-        
-        // Set up navigation drawer
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        mDrawerToggle = new ActionBarDrawerToggle(
-                this,                  /* host Activity */
-                mDrawerLayout,         /* DrawerLayout object */
-                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-                R.string.drawer_open,  /* "open drawer" description */
-                R.string.drawer_close  /* "close drawer" description */
-                ) {
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                getSupportActionBar().setTitle(getTitle());
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                getSupportActionBar().setTitle(getTitle());
-            }
-        };
-
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        
-        // Set a timer to update itemList
-        timer.schedule(task, 0, updateInterval); // Update every 30 seconds
+        if(checkPlayServices()) {
+            itemList = (ListView) findViewById(R.id.stream);
+            drawer = new Drawer(this);
+            
+            // Check if intent was a search
+            Intent intent = getIntent();
+            handleIntent(intent);
+            itemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    
+                @Override
+                public void onItemClick(AdapterView<?> parent, final View view,
+                    int position, long id) {
+                    @SuppressWarnings("unchecked")
+                    final Item item = (Item) ((Map<String, Object>) parent.getItemAtPosition(position)).get("item");
+                    displayItemDetails(item);
+                }
+    
+              });
+            
+            // Set up navigation drawer
+            mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
+            mDrawerToggle = new ActionBarDrawerToggle(
+                    this,                  /* host Activity */
+                    mDrawerLayout,         /* DrawerLayout object */
+                    R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+                    R.string.drawer_open,  /* "open drawer" description */
+                    R.string.drawer_close  /* "close drawer" description */
+                    ) {
+    
+                /** Called when a drawer has settled in a completely closed state. */
+                public void onDrawerClosed(View view) {
+                    super.onDrawerClosed(view);
+                    getSupportActionBar().setTitle(getTitle());
+                }
+    
+                /** Called when a drawer has settled in a completely open state. */
+                public void onDrawerOpened(View drawerView) {
+                    super.onDrawerOpened(drawerView);
+                    getSupportActionBar().setTitle(getTitle());
+                }
+            };
+    
+            // Set the drawer toggle as the DrawerListener
+            mDrawerLayout.setDrawerListener(mDrawerToggle);
+            mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+    
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            
+            // Set a timer to update itemList
+            timer.schedule(refreshTask, 0, updateInterval); // Update every 30 seconds
+            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 seconds
+        }
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         // Check if user is verified
-        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
-            startActivity(new Intent(this, CreateAccount.class));
-            finish();
+        if(checkPlayServices()) {
+            if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+                startActivity(new Intent(this, CreateAccount.class));
+                finish();
+            }
         }
     }
     
@@ -305,5 +331,46 @@ public class MainStream extends ActionBarActivity {
         } else {
             showAll();
         }
+    }
+    
+    private void pullFromServerAndUpdate() {
+        // Pull from server
+        List<Item> itemUpdates = new ArrayList<Item>();
+        itemUpdates.add(new Item("Refrigerator", "It's a broken refrigerator", new Date(), "32-044", "appliance", true));
+        
+        // Update
+        for (Item item : itemUpdates) {
+            String name = item.name;
+            String desc = item.description;
+            Item storedItem = Entity.query(Item.class).where(Query.and(Query.eql("name", name), Query.eql("description", desc))).execute();
+            if(storedItem != null) {
+                storedItem.isAvailable = item.isAvailable;
+                storedItem.save();
+            } else {
+                // Add new item
+                item.save();
+            }
+        }
+        refreshItems();
+    }
+    
+    /**
+     * Check the device to make sure it has the Google Play Services APK. If
+     * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
+     */
+    private boolean checkPlayServices() {
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Log.i("NOT_SUPPORTED", "This device is not supported.");
+                finish();
+            }
+            return false;
+        }
+        return true;
     }
 }
