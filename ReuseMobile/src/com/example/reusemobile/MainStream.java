@@ -88,7 +88,7 @@ public class MainStream extends ActionBarActivity {
 
         }
     };
-    private int pullInterval = 30 * 60 * 1000;
+    private int pullInterval = 1 * 60 * 1000;
     private TimerTask pullFromServerTask = new TimerTask() {
         @Override
         public void run() {
@@ -335,7 +335,7 @@ public class MainStream extends ActionBarActivity {
         
         // No keywords
         if (keywords.length == 0) {
-            for (Item item : Entity.query(Item.class).executeMulti()) {
+            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
                 datum.put("description", item.description);
@@ -354,7 +354,7 @@ public class MainStream extends ActionBarActivity {
             whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
             whereQuery.append("tags LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
             whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
-            for (Item item : Entity.query(Item.class).where(whereQuery.toString()).executeMulti()) {
+            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).where(whereQuery.toString()).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
                 datum.put("description", item.description);
