@@ -67,6 +67,8 @@ public class MapView extends ActionBarActivity  {
         for(Item item : itemList) {
             if(item.isAvailable) {
             String building = item.location.split("-")[0];
+            LatLng location = buildingLocations.get(building);
+            if(location == null) location = new LatLng(42.358953, -71.091634);
             map.addMarker(new MarkerOptions()
                     .title(item.name)
                     .snippet(item.description)

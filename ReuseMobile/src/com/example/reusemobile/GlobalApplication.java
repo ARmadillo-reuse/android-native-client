@@ -6,6 +6,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.example.reusemobile.model.Item;
 import com.roscopeco.ormdroid.Entity;
@@ -45,6 +46,7 @@ public class GlobalApplication extends Application {
             
             @Override
             public void run() {
+                Log.i("Cleaning", "Cleaning old entries in db");
                 for(Item item : Entity.query(Item.class).executeMulti()) {
                     long elapsedMins = (new Date().getTime() - item.date.getTime()) / 60000;
                     if(!item.isAvailable && elapsedMins > 30) {

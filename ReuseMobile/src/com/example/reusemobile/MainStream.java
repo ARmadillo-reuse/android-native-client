@@ -1,18 +1,31 @@
 package com.example.reusemobile;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.app.SearchManager;
 import android.app.SearchableInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -32,6 +45,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.reusemobile.model.Item;
 import com.example.reusemobile.views.Drawer;
@@ -58,12 +72,13 @@ public class MainStream extends ActionBarActivity {
     public ListView itemList;
     public Drawer drawer;
     
-    private String[] currentFilters;
+    private String[] currentKeywords;
     private Timer timer = new Timer();
     private int updateInterval = 30 * 1000;
     private TimerTask refreshTask = new TimerTask() {
         @Override
         public void run() {
+            Log.i("Refresh", "Refreshing item list");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -77,13 +92,13 @@ public class MainStream extends ActionBarActivity {
     private TimerTask pullFromServerTask = new TimerTask() {
         @Override
         public void run() {
+            Log.i("Pull", "Pulling from server");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     pullFromServerAndUpdate();
                 }
             });
-
         }
     };
     
@@ -150,7 +165,7 @@ public class MainStream extends ActionBarActivity {
             
             // Set a timer to update itemList
             timer.schedule(refreshTask, 0, updateInterval); // Update every 30 seconds
-            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 seconds
+            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 minutes
         }
     }
     
@@ -210,7 +225,7 @@ public class MainStream extends ActionBarActivity {
         switch (item.getItemId()) {
         case R.id.action_map_view:
             Intent intent = new Intent(this, MapView.class);
-            intent.putExtra(FILTERS, currentFilters);
+            intent.putExtra(FILTERS, currentKeywords);
             startActivity(intent);
             return true;
         case R.id.action_search:
@@ -242,6 +257,10 @@ public class MainStream extends ActionBarActivity {
         handleIntent(intent);
     }
     
+    /**
+     * Launches ItemDetails activity
+     * @param item the item to display details for
+     */
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
         intent.putExtra(ITEM_ID, item.id);
@@ -253,24 +272,36 @@ public class MainStream extends ActionBarActivity {
         startActivity(intent);
     }
     
+    /**
+     * Shows all items in db on the screen
+     */
     public void showAll() {
-        currentFilters = new String[0];
+        currentKeywords = new String[0];
         refreshItems();
     }
     
+    /**
+     * Grabs the keywords associated with a filter and updates them
+     * in the currentFilters field.
+     * @param filter the filter whose keywords are to be used.
+     */
     public void applyFilter(String filter) {
         String[] keywords = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
-        currentFilters = keywords;
+        currentKeywords = keywords;
         refreshItems();
     }
     
+    /**
+     * Using the current filters, the keywords from the filter is
+     * used in a query and updates the page with the queried items.
+     */
     private void refreshItems() {
-        if (currentFilters.length == 0) {
+        if (currentKeywords.length == 0) {
             setTitle("All Items");
         } else {
             setTitle("Filtered Items");
         }
-        List<Map<String, Object>> data = getItems(currentFilters);
+        List<Map<String, Object>> data = getItems(currentKeywords);
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                                                   android.R.layout.simple_list_item_2,
                                                   new String[] {"name", "description"},
@@ -292,6 +323,11 @@ public class MainStream extends ActionBarActivity {
         itemList.setAdapter(adapter);
     }
     
+    /**
+     * Generates data for the SimpleAdapter to use
+     * @param keywords the keywords to search for objects with
+     * @return a list of maps, each map representing an item
+     */
     public static List<Map<String, Object>> getItems(String[] keywords) {
         List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
         
@@ -309,9 +345,13 @@ public class MainStream extends ActionBarActivity {
             for (int i = 0; i < keywords.length - 1; i++) {
                 whereQuery.append("name LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
                 whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
+                whereQuery.append("tags LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
+                whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
             }
             whereQuery.append("name LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
-            whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
+            whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
+            whereQuery.append("tags LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
+            whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
             for (Item item : Entity.query(Item.class).where(whereQuery.toString()).executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
@@ -324,35 +364,35 @@ public class MainStream extends ActionBarActivity {
         return data;
     }
     
+    /**
+     * Sets up a filter display if coming from a search query
+     * @param intent the intent that started this activity
+     */
     private void handleIntent(Intent intent) {
         drawer.updateFilters();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            currentFilters = query.trim().split(" ");
+            currentKeywords = query.trim().split(" ");
             refreshItems();
         } else {
             showAll();
         }
     }
     
+    /**
+     * Ensures the app can connect to the network service and issued
+     * the Async pull request.
+     */
     private void pullFromServerAndUpdate() {
-        // Pull from server
-        List<Item> itemUpdates = new ArrayList<Item>();
-        itemUpdates.add(new Item(4, "Refrigerator", "It's a broken refrigerator", new Date(), "32-044", "appliance", true));
-        
-        // Update
-        for (Item item : itemUpdates) {
-            Item storedItem = Entity.query(Item.class).where(Query.eql("id", item.id)).execute();
-            if(storedItem != null) {
-                storedItem.isAvailable = item.isAvailable;
-                storedItem.date = item.date;
-                storedItem.save();
+            // Pull from server
+            ConnectivityManager connMgr = (ConnectivityManager) 
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                new PullRequest().execute(""); // Updates on completion
             } else {
-                // Add new item
-                item.save();
+                Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
             }
-        }
-        refreshItems();
     }
     
     /**
@@ -373,5 +413,76 @@ public class MainStream extends ActionBarActivity {
             return false;
         }
         return true;
+    }
+    
+    /**
+     * Makes an HTTP GET request to the server, asking for a list of updated
+     * items, since a given time.
+     */
+    private class PullRequest extends AsyncTask<String, Void, String> {
+        //TODO: Add time param
+        
+        @Override
+        protected String doInBackground(String... params) {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=1994-01-01+00:00");
+            try {
+                // Execute HTTP Get Request
+                HttpResponse response = httpclient.execute(httpget);
+                if(response.getStatusLine().getStatusCode() == 200) {
+                    // Parse JSON response
+                    JSONArray jlist = new JSONArray(EntityUtils.toString(response.getEntity()));
+                    for (int i = 0; i < jlist.length(); i++) {
+                        // Parse from JSON to Item
+                        JSONObject jsonObject = jlist.getJSONObject(i);
+                        Integer id = jsonObject.getInt("pk");
+                        JSONObject fields = jsonObject.getJSONObject("fields");
+                        String name = fields.getString("name");
+                        String desc = name;
+                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
+                        Date date = df.parse(fields.getString("modified"));
+                        Boolean isAvailable = !fields.getBoolean("claimed");
+                        String location = "10-250";
+                        String tags = "tags";
+                        
+                        // Check if item is already in db
+                        Item oldItem = Entity.query(Item.class).where(Query.eql("id", id)).execute();
+                        if(oldItem != null) {
+                            // Update old item
+                            oldItem.name = name;
+                            oldItem.description = desc;
+                            oldItem.date = date;
+                            oldItem.isAvailable = isAvailable;
+                            oldItem.location = location;
+                            oldItem.tags = tags;
+                            oldItem.save();
+                        } else {
+                            // Add new item
+                            Item item = new Item(id, name, desc, date, location, tags, isAvailable);
+                            item.save();
+                        }
+                    }
+                    return null;
+                } else {
+                    return "An Error occured in item pull:\n" + response.getStatusLine().getReasonPhrase();
+                }
+            } catch (Exception e) {
+                Log.i("Exception", e.getLocalizedMessage());
+                return "An exception occured: " + e.getLocalizedMessage();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            if(result == null) {
+                refreshItems();
+            } else {
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
+        }
+        
+        
+        
     }
 }
