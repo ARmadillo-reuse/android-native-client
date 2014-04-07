@@ -15,6 +15,16 @@
         app:columnCount="3" >
 
         <EditText
+            android:id="@+id/post_name"
+            android:layout_width="wrap_content"
+            android:layout_marginTop="10dp"
+            app:layout_column="2"
+            app:layout_gravity="left|top"
+            app:layout_row="0"
+            android:ems="10"
+            android:hint="Item Name" />
+
+        <EditText
             android:id="@+id/post_loc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -92,16 +102,6 @@
             app:layout_row="0"
             android:text="@string/post_name"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
-        <EditText
-            android:id="@+id/post_name"
-            android:layout_width="wrap_content"
-            android:layout_marginTop="10dp"
-            app:layout_column="2"
-            app:layout_gravity="left|top"
-            app:layout_row="0"
-            android:ems="10"
-            android:hint="Item Name" />
     </android.support.v7.widget.GridLayout>
 
     <Button

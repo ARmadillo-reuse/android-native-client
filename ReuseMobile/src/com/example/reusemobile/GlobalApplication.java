@@ -1,11 +1,11 @@
 package com.example.reusemobile;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Application;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.reusemobile.model.Item;
@@ -14,16 +14,16 @@ import com.roscopeco.ormdroid.ORMDroidApplication;
 
 public class GlobalApplication extends Application {
     
-    private Integer[] ids = {1, 2, 3};
-    private String[] items = {"Dell Desktop", "Random electronic stuff", "Free Dogecoin!!!"};
-    private String[] descriptions = {"An old dell desktop. Missing HDD. Please take all.",
-                                     "Box of random electric things. Floppy disks galore!",
-                                     "Come see me if you want some free dogecoin. Much currency. Such value. Wow! This is an arbitrarily long string. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHhhhh"};
-    private String[] tags = {"computer desktop dell",
-                             "capacitors floppy disks wires",
-                             "dogecoin wow"};
-    private String[] locations = {"32-123", "10-250", "16-676"};
-    private Boolean[] available = {true, true, true};
+//    private Integer[] ids = {1, 2, 3};
+//    private String[] items = {"Dell Desktop", "Random electronic stuff", "Free Dogecoin!!!"};
+//    private String[] descriptions = {"An old dell desktop. Missing HDD. Please take all.",
+//                                     "Box of random electric things. Floppy disks galore!",
+//                                     "Come see me if you want some free dogecoin. Much currency. Such value. Wow! This is an arbitrarily long string. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHhhhh"};
+//    private String[] tags = {"computer desktop dell",
+//                             "capacitors floppy disks wires",
+//                             "dogecoin wow"};
+//    private String[] locations = {"32-123", "10-250", "16-676"};
+//    private Boolean[] available = {true, true, true};
     
     public static String filterPreferences = "com.example.reuse.filters";
 
@@ -31,14 +31,14 @@ public class GlobalApplication extends Application {
     public void onCreate() {
         super.onCreate();
         ORMDroidApplication.initialize(this);
-        // Empty db
-        List<Item> previousEntries = Entity.query(Item.class).executeMulti();
-        if (previousEntries.size() == 0) {
-            // Insert new items
-            for (int i = 0; i < 3; i++) {
-                (new Item(ids[i], items[i], descriptions[i], new Date(), locations[i], tags[i], available[i])).save();
-            }
-        }
+//        // Empty db
+//        List<Item> previousEntries = Entity.query(Item.class).executeMulti();
+//        if (previousEntries.size() == 0) {
+//            // Insert new items
+//            for (int i = 0; i < 3; i++) {
+//                (new Item(ids[i], items[i], descriptions[i], new Date(), locations[i], tags[i], available[i])).save();
+//            }
+//        }
         
         // Create db cleaner
         Timer timer = new Timer();
@@ -56,5 +56,8 @@ public class GlobalApplication extends Application {
             }
         };
         timer.schedule(task, 0, 60 * 1000); // Check every minute
+        
+        // REMOVE ME
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putString("token", "64919ef302e63945b80b171e0ca2ec2c46b889ae301e5491a66b0831");
     }
 }

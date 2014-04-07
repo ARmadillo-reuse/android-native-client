@@ -8,6 +8,7 @@ import java.util.Map;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -66,13 +67,14 @@ public class MapView extends ActionBarActivity  {
         // Add markers for each active item
         for(Item item : itemList) {
             if(item.isAvailable) {
-            String building = item.location.split("-")[0];
-            LatLng location = buildingLocations.get(building);
-            if(location == null) location = new LatLng(42.358953, -71.091634);
-            map.addMarker(new MarkerOptions()
-                    .title(item.name)
-                    .snippet(item.description)
-                    .position(buildingLocations.get(building)));
+                String building = item.location.split("-")[0];
+                Log.i("Building", building);
+                LatLng location = buildingLocations.get(building);
+                if(location == null) location = new LatLng(42.358953, -71.091634);
+                map.addMarker(new MarkerOptions()
+                        .title(item.name)
+                        .snippet(item.description)
+                        .position(location));
             }
         }
     }

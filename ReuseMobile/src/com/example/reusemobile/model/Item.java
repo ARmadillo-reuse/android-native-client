@@ -38,6 +38,5 @@ public class Item extends Entity {
     public void markAsClaimed() {
         name = "[CLAIMED] " + name;
         isAvailable = false;
-        save();
     }
 }

@@ -177,6 +177,8 @@ public class MainStream extends ActionBarActivity {
             if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
                 startActivity(new Intent(this, CreateAccount.class));
                 finish();
+            } else {
+                pullFromServerAndUpdate();
             }
         }
     }
@@ -426,6 +428,10 @@ public class MainStream extends ActionBarActivity {
         protected String doInBackground(String... params) {
             HttpClient httpclient = new DefaultHttpClient();
             HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=1994-01-01+00:00");
+            String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
+            httpget.addHeader("USERNAME", email);
+            String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
+            httpget.addHeader("TOKEN", token);
             try {
                 // Execute HTTP Get Request
                 HttpResponse response = httpclient.execute(httpget);
@@ -452,7 +458,11 @@ public class MainStream extends ActionBarActivity {
                             oldItem.name = name;
                             oldItem.description = desc;
                             oldItem.date = date;
-                            oldItem.isAvailable = isAvailable;
+                            if(!isAvailable) {
+                                oldItem.markAsClaimed();
+                            } else {
+                                oldItem.isAvailable = isAvailable;
+                            }
                             oldItem.location = location;
                             oldItem.tags = tags;
                             oldItem.save();
@@ -468,7 +478,7 @@ public class MainStream extends ActionBarActivity {
                 }
             } catch (Exception e) {
                 Log.i("Exception", e.getLocalizedMessage());
-                return "An exception occured: " + e.getLocalizedMessage();
+                return "An exception occured:\n" + e.getLocalizedMessage();
             }
         }
 
