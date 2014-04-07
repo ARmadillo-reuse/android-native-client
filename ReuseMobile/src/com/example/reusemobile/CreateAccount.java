@@ -1,6 +1,24 @@
 package com.example.reusemobile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -14,6 +32,25 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class CreateAccount extends ActionBarActivity {
+    private Timer timer = new Timer();
+    private TimerTask appLogin = new TimerTask() {
+        
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+
+                    startActivity(new Intent(getApplicationContext(), MainStream.class));
+                    finish();
+                }
+            });
+
+        }
+    };
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,14 +89,18 @@ public class CreateAccount extends ActionBarActivity {
         if(!email.endsWith("@mit.edu")) {
             Toast.makeText(this, "Email address must be a valid MIT email", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
-            // Send create account request to server
+            ConnectivityManager connMgr = (ConnectivityManager) 
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                new SendLogin().execute(email);
+            } else {
+                Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
+            }
+            
             
             // REMOVE ME
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean("isVerified", true).commit();
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putString("username", email).commit();
-            startActivity(new Intent(this, MainStream.class));
-            finish();
+
         }
     }
 
@@ -80,4 +121,47 @@ public class CreateAccount extends ActionBarActivity {
         }
     }
 
+    
+    private class SendLogin extends AsyncTask<String, Void, HttpResponse> {
+        String email;
+        
+        @Override
+        protected HttpResponse doInBackground(String... params) {
+         // Create a new HttpClient and Post Header
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:8000/api/login/signup/");
+            email = params[0];
+            try {
+                // Add your data
+                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+                nameValuePairs.add(new BasicNameValuePair("email", email));
+                //nameValuePairs.add(new BasicNameValuePair("gcm_id", "1038751243496"));
+                httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+                // Execute HTTP Post Request
+                HttpResponse response = httpclient.execute(httppost);
+                
+                return response;
+            } catch (IOException e) {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(HttpResponse result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            if(result.getStatusLine().getStatusCode() == 200) {
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean("isVerified", true).commit();
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("username", email).commit();
+                Toast.makeText(getApplicationContext(), "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
+                timer.schedule(appLogin, 0);
+            } else {
+                Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result.getStatusLine().getReasonPhrase(), Toast.LENGTH_LONG).show();
+            }
+        }
+        
+        
+        
+    }
 }

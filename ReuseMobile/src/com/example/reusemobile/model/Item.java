@@ -5,7 +5,7 @@ import java.util.Date;
 import com.roscopeco.ormdroid.Entity;
 
 public class Item extends Entity {
-    public int _id;
+    public Integer id;
     public String name;
     public String description;
     public Date date;
@@ -14,10 +14,11 @@ public class Item extends Entity {
     public Boolean isAvailable;
     
     public Item() {
-      this(null, null, null, null, null, null);
+      this(null, null, null, null, null, null, null);
     }
     
-    public Item(String name, String description, Date date, String location, String tags, Boolean isAvailable) {
+    public Item(Integer id, String name, String description, Date date, String location, String tags, Boolean isAvailable) {
+      this.id = id;
       this.name = name;
       this.description = description;
       this.date = date;
@@ -37,6 +38,5 @@ public class Item extends Entity {
     public void markAsClaimed() {
         name = "[CLAIMED] " + name;
         isAvailable = false;
-        save();
     }
 }

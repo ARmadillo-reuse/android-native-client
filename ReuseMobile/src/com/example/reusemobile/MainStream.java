@@ -1,17 +1,31 @@
 package com.example.reusemobile;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.app.SearchManager;
 import android.app.SearchableInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -21,6 +35,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils.TruncateAt;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -30,14 +45,21 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.reusemobile.model.Item;
 import com.example.reusemobile.views.Drawer;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
+import com.roscopeco.ormdroid.Query;
 import com.roscopeco.ormdroid.TypeMapper;
 
 public class MainStream extends ActionBarActivity {
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    
+    public final static String ITEM_ID = "com.example.reusemobile.ID";
     public final static String ITEM_NAME = "com.example.reusemobile.ITEM_NAME";
     public final static String ITEM_DESCRIPTION = "com.example.reusemobile.ITEM_DESCRIPTION";
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
@@ -50,12 +72,13 @@ public class MainStream extends ActionBarActivity {
     public ListView itemList;
     public Drawer drawer;
     
-    private String[] currentFilters;
+    private String[] currentKeywords;
     private Timer timer = new Timer();
     private int updateInterval = 30 * 1000;
-    private TimerTask task = new TimerTask() {
+    private TimerTask refreshTask = new TimerTask() {
         @Override
         public void run() {
+            Log.i("Refresh", "Refreshing item list");
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -63,6 +86,19 @@ public class MainStream extends ActionBarActivity {
                 }
             });
 
+        }
+    };
+    private int pullInterval = 1 * 60 * 1000;
+    private TimerTask pullFromServerTask = new TimerTask() {
+        @Override
+        public void run() {
+            Log.i("Pull", "Pulling from server");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    pullFromServerAndUpdate();
+                }
+            });
         }
     };
     
@@ -77,65 +113,73 @@ public class MainStream extends ActionBarActivity {
         }
         
         setContentView(R.layout.activity_main_stream);
-        itemList = (ListView) findViewById(R.id.stream);
-        drawer = new Drawer(this);
         
-        // Check if intent was a search
-        Intent intent = getIntent();
-        handleIntent(intent);
-        itemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, final View view,
-                int position, long id) {
-                @SuppressWarnings("unchecked")
-                final Item item = (Item) ((Map<String, Object>) parent.getItemAtPosition(position)).get("item");
-                displayItemDetails(item);
-            }
-
-          });
-        
-        // Set up navigation drawer
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        mDrawerToggle = new ActionBarDrawerToggle(
-                this,                  /* host Activity */
-                mDrawerLayout,         /* DrawerLayout object */
-                R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
-                R.string.drawer_open,  /* "open drawer" description */
-                R.string.drawer_close  /* "close drawer" description */
-                ) {
-
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-                getSupportActionBar().setTitle(getTitle());
-            }
-
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-                getSupportActionBar().setTitle(getTitle());
-            }
-        };
-
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        
-        // Set a timer to update itemList
-        timer.schedule(task, 0, updateInterval); // Update every 30 seconds
+        if(checkPlayServices()) {
+            itemList = (ListView) findViewById(R.id.stream);
+            drawer = new Drawer(this);
+            
+            // Check if intent was a search
+            Intent intent = getIntent();
+            handleIntent(intent);
+            itemList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    
+                @Override
+                public void onItemClick(AdapterView<?> parent, final View view,
+                    int position, long id) {
+                    @SuppressWarnings("unchecked")
+                    final Item item = (Item) ((Map<String, Object>) parent.getItemAtPosition(position)).get("item");
+                    displayItemDetails(item);
+                }
+    
+              });
+            
+            // Set up navigation drawer
+            mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
+            mDrawerToggle = new ActionBarDrawerToggle(
+                    this,                  /* host Activity */
+                    mDrawerLayout,         /* DrawerLayout object */
+                    R.drawable.ic_drawer,  /* nav drawer icon to replace 'Up' caret */
+                    R.string.drawer_open,  /* "open drawer" description */
+                    R.string.drawer_close  /* "close drawer" description */
+                    ) {
+    
+                /** Called when a drawer has settled in a completely closed state. */
+                public void onDrawerClosed(View view) {
+                    super.onDrawerClosed(view);
+                    getSupportActionBar().setTitle(getTitle());
+                }
+    
+                /** Called when a drawer has settled in a completely open state. */
+                public void onDrawerOpened(View drawerView) {
+                    super.onDrawerOpened(drawerView);
+                    getSupportActionBar().setTitle(getTitle());
+                }
+            };
+    
+            // Set the drawer toggle as the DrawerListener
+            mDrawerLayout.setDrawerListener(mDrawerToggle);
+            mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+    
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            
+            // Set a timer to update itemList
+            timer.schedule(refreshTask, 0, updateInterval); // Update every 30 seconds
+            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 minutes
+        }
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         // Check if user is verified
-        if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
-            startActivity(new Intent(this, CreateAccount.class));
-            finish();
+        if(checkPlayServices()) {
+            if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+                startActivity(new Intent(this, CreateAccount.class));
+                finish();
+            } else {
+                pullFromServerAndUpdate();
+            }
         }
     }
     
@@ -183,7 +227,7 @@ public class MainStream extends ActionBarActivity {
         switch (item.getItemId()) {
         case R.id.action_map_view:
             Intent intent = new Intent(this, MapView.class);
-            intent.putExtra(FILTERS, currentFilters);
+            intent.putExtra(FILTERS, currentKeywords);
             startActivity(intent);
             return true;
         case R.id.action_search:
@@ -215,8 +259,13 @@ public class MainStream extends ActionBarActivity {
         handleIntent(intent);
     }
     
+    /**
+     * Launches ItemDetails activity
+     * @param item the item to display details for
+     */
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
+        intent.putExtra(ITEM_ID, item.id);
         intent.putExtra(ITEM_NAME, item.name);
         intent.putExtra(ITEM_DESCRIPTION, item.description);
         intent.putExtra(ITEM_DATE, item.date.getTime());
@@ -225,24 +274,36 @@ public class MainStream extends ActionBarActivity {
         startActivity(intent);
     }
     
+    /**
+     * Shows all items in db on the screen
+     */
     public void showAll() {
-        currentFilters = new String[0];
+        currentKeywords = new String[0];
         refreshItems();
     }
     
+    /**
+     * Grabs the keywords associated with a filter and updates them
+     * in the currentFilters field.
+     * @param filter the filter whose keywords are to be used.
+     */
     public void applyFilter(String filter) {
         String[] keywords = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
-        currentFilters = keywords;
+        currentKeywords = keywords;
         refreshItems();
     }
     
+    /**
+     * Using the current filters, the keywords from the filter is
+     * used in a query and updates the page with the queried items.
+     */
     private void refreshItems() {
-        if (currentFilters.length == 0) {
+        if (currentKeywords.length == 0) {
             setTitle("All Items");
         } else {
             setTitle("Filtered Items");
         }
-        List<Map<String, Object>> data = getItems(currentFilters);
+        List<Map<String, Object>> data = getItems(currentKeywords);
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                                                   android.R.layout.simple_list_item_2,
                                                   new String[] {"name", "description"},
@@ -264,12 +325,17 @@ public class MainStream extends ActionBarActivity {
         itemList.setAdapter(adapter);
     }
     
+    /**
+     * Generates data for the SimpleAdapter to use
+     * @param keywords the keywords to search for objects with
+     * @return a list of maps, each map representing an item
+     */
     public static List<Map<String, Object>> getItems(String[] keywords) {
         List<Map<String, Object>> data = new ArrayList<Map<String, Object>>();
         
         // No keywords
         if (keywords.length == 0) {
-            for (Item item : Entity.query(Item.class).executeMulti()) {
+            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
                 datum.put("description", item.description);
@@ -281,10 +347,14 @@ public class MainStream extends ActionBarActivity {
             for (int i = 0; i < keywords.length - 1; i++) {
                 whereQuery.append("name LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
                 whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
+                whereQuery.append("tags LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
+                whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[i] + '%') + " OR ");
             }
             whereQuery.append("name LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
-            whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
-            for (Item item : Entity.query(Item.class).where(whereQuery.toString()).executeMulti()) {
+            whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
+            whereQuery.append("tags LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
+            whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
+            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).where(whereQuery.toString()).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
                 datum.put("description", item.description);
@@ -296,14 +366,133 @@ public class MainStream extends ActionBarActivity {
         return data;
     }
     
+    /**
+     * Sets up a filter display if coming from a search query
+     * @param intent the intent that started this activity
+     */
     private void handleIntent(Intent intent) {
         drawer.updateFilters();
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            currentFilters = query.trim().split(" ");
+            currentKeywords = query.trim().split(" ");
             refreshItems();
         } else {
             showAll();
         }
+    }
+    
+    /**
+     * Ensures the app can connect to the network service and issued
+     * the Async pull request.
+     */
+    private void pullFromServerAndUpdate() {
+            // Pull from server
+            ConnectivityManager connMgr = (ConnectivityManager) 
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                new PullRequest().execute(""); // Updates on completion
+            } else {
+                Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
+            }
+    }
+    
+    /**
+     * Check the device to make sure it has the Google Play Services APK. If
+     * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
+     */
+    private boolean checkPlayServices() {
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Log.i("NOT_SUPPORTED", "This device is not supported.");
+                finish();
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Makes an HTTP GET request to the server, asking for a list of updated
+     * items, since a given time.
+     */
+    private class PullRequest extends AsyncTask<String, Void, String> {
+        //TODO: Add time param
+        
+        @Override
+        protected String doInBackground(String... params) {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=1994-01-01+00:00");
+            String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
+            httpget.addHeader("USERNAME", email);
+            String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
+            httpget.addHeader("TOKEN", token);
+            try {
+                // Execute HTTP Get Request
+                HttpResponse response = httpclient.execute(httpget);
+                if(response.getStatusLine().getStatusCode() == 200) {
+                    // Parse JSON response
+                    JSONArray jlist = new JSONArray(EntityUtils.toString(response.getEntity()));
+                    for (int i = 0; i < jlist.length(); i++) {
+                        // Parse from JSON to Item
+                        JSONObject jsonObject = jlist.getJSONObject(i);
+                        Integer id = jsonObject.getInt("pk");
+                        JSONObject fields = jsonObject.getJSONObject("fields");
+                        String name = fields.getString("name");
+                        String desc = name;
+                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
+                        Date date = df.parse(fields.getString("modified"));
+                        Boolean isAvailable = !fields.getBoolean("claimed");
+                        String location = "10-250";
+                        String tags = "tags";
+                        
+                        // Check if item is already in db
+                        Item oldItem = Entity.query(Item.class).where(Query.eql("id", id)).execute();
+                        if(oldItem != null) {
+                            // Update old item
+                            oldItem.name = name;
+                            oldItem.description = desc;
+                            oldItem.date = date;
+                            if(!isAvailable) {
+                                oldItem.markAsClaimed();
+                            } else {
+                                oldItem.isAvailable = isAvailable;
+                            }
+                            oldItem.location = location;
+                            oldItem.tags = tags;
+                            oldItem.save();
+                        } else {
+                            // Add new item
+                            Item item = new Item(id, name, desc, date, location, tags, isAvailable);
+                            item.save();
+                        }
+                    }
+                    return null;
+                } else {
+                    return "An Error occured in item pull:\n" + response.getStatusLine().getReasonPhrase();
+                }
+            } catch (Exception e) {
+                Log.i("Exception", e.getLocalizedMessage());
+                return "An exception occured:\n" + e.getLocalizedMessage();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            if(result == null) {
+                refreshItems();
+            } else {
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
+        }
+        
+        
+        
     }
 }

@@ -1,11 +1,22 @@
 package com.example.reusemobile;
 
-import com.example.reusemobile.model.Item;
-import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
@@ -16,6 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ItemDetails extends ActionBarActivity {
     private TextView nameField;
@@ -23,6 +35,13 @@ public class ItemDetails extends ActionBarActivity {
     private TextView dateField;
     private TextView locField;
     private Button claimButton;
+    
+    private int itemId;
+    private String itemName;
+    private String itemDescription;
+    private Long itemDate;
+    private String itemLocation;
+    private Boolean itemAvailable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +60,12 @@ public class ItemDetails extends ActionBarActivity {
         claimButton = (Button) findViewById(R.id.claim_button);
         
         Intent intent = getIntent();
-        String itemName = intent.getStringExtra(MainStream.ITEM_NAME);
-        String itemDescription = intent.getStringExtra(MainStream.ITEM_DESCRIPTION);
-        Long itemDate = intent.getLongExtra(MainStream.ITEM_DATE, 0L);
-        String itemLocation = intent.getStringExtra(MainStream.ITEM_LOCATION);
-        Boolean itemAvailable = intent.getBooleanExtra(MainStream.ITEM_AVAILABLE, false);
+        itemId = intent.getIntExtra(MainStream.ITEM_ID, -1);
+        itemName = intent.getStringExtra(MainStream.ITEM_NAME);
+        itemDescription = intent.getStringExtra(MainStream.ITEM_DESCRIPTION);
+        itemDate = intent.getLongExtra(MainStream.ITEM_DATE, 0L);
+        itemLocation = intent.getStringExtra(MainStream.ITEM_LOCATION);
+        itemAvailable = intent.getBooleanExtra(MainStream.ITEM_AVAILABLE, false);
         nameField.setText(itemName);
         descField.setText(itemDescription);
         dateField.setText(DateFormat.format("MM/dd/yyyy hh:mm:ssa", itemDate));
@@ -79,11 +99,9 @@ public class ItemDetails extends ActionBarActivity {
     
     public void claim(View view) {
         // Process claim action
-        //REMOVEME
-        Item item = Entity.query(Item.class).where(Query.and(Query.eql("name", nameField.getText()), Query.eql("description", descField.getText()))).execute();
-        item.markAsClaimed();
         claimButton.setEnabled(false);
-        claimButton.setText("Claimed");
+
+        new SendClaim().execute(itemId);
     }
 
     /**
@@ -104,4 +122,50 @@ public class ItemDetails extends ActionBarActivity {
         }
     }
 
+    
+    private class SendClaim extends AsyncTask<Integer, Void, String> {
+        @Override
+        protected String doInBackground(Integer... params) {
+         // Create a new HttpClient and Post Header
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:8000/api/thread/claim/");
+            String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
+            httppost.addHeader("USERNAME", email);
+            String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
+            httppost.addHeader("TOKEN", token);
+            Integer id = params[0];
+            try {
+                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+                nameValuePairs.add(new BasicNameValuePair("item_id", id.toString()));
+                //nameValuePairs.add(new BasicNameValuePair("gcm_id", "1038751243496"));
+                httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+                // Execute HTTP Post Request
+                HttpResponse response = httpclient.execute(httppost);
+                boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
+                if(response.getStatusLine().getStatusCode() != 200) {
+                    return "An error occured in item claim:\n" + response.getStatusLine().getReasonPhrase();
+                } else if(!wasSuccessful) {
+                    return "Item claim failed:\nThe item was already claimed :'(";
+                }
+                
+                return null;
+            } catch (Exception e) {
+                return "An exception occured during item claim:\n" + e.getLocalizedMessage();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            if(result == null) {
+                claimButton.setText("Claimed");
+                Toast.makeText(getApplicationContext(), "Item Claimed", Toast.LENGTH_SHORT).show();
+            } else {
+                claimButton.setEnabled(true);
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }
