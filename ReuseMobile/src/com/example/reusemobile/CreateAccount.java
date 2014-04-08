@@ -152,8 +152,18 @@ public class CreateAccount extends ActionBarActivity {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
             if(result.getStatusLine().getStatusCode() == 200) {
+                // REMOVE ME
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean("isVerified", true).commit();
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("username", email).commit();
+                if(email.equals("crogers3@mit.edu")) {
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "64919ef302e63945b80b171e0ca2ec2c46b889ae301e5491a66b0831").commit();
+                } else if(email.equals("shaladi@mit.edu")) {
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "abdcb57ca3fb20f73e4d7c4546a43ce869b1217a368864ffec86ae82").commit();
+                } else if(email.equals("manting@mit.edu")) {
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "079646d723d12daaba4449789bd7ba8021c26953dcc09d5c017eed7f").commit();
+                } else if(email.equals("akonradi@mit.edu")) {
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "1831ef98490487f93463bbdfb81bb8a0ee483a38ad6c79a05f10b69b").commit();
+                }
                 Toast.makeText(getApplicationContext(), "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
                 timer.schedule(appLogin, 20 * 1000);
             } else {
