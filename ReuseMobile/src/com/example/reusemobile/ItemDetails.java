@@ -20,6 +20,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -142,10 +143,13 @@ public class ItemDetails extends ActionBarActivity {
 
                 // Execute HTTP Post Request
                 HttpResponse response = httpclient.execute(httppost);
-                boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
+                
                 if(response.getStatusLine().getStatusCode() != 200) {
+                    Log.e("Item Details", String.valueOf(itemId));
                     return "An error occured in item claim:\n" + response.getStatusLine().getReasonPhrase();
-                } else if(!wasSuccessful) {
+                }
+                boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
+                if(!wasSuccessful) {
                     return "Item claim failed:\nThe item was already claimed :'(";
                 }
                 

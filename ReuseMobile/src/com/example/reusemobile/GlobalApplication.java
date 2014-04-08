@@ -26,6 +26,7 @@ public class GlobalApplication extends Application {
 //    private Boolean[] available = {true, true, true};
     
     public static String filterPreferences = "com.example.reuse.filters";
+    public static boolean debug = true;
 
     @Override
     public void onCreate() {

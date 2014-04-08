@@ -155,7 +155,7 @@ public class CreateAccount extends ActionBarActivity {
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean("isVerified", true).commit();
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("username", email).commit();
                 Toast.makeText(getApplicationContext(), "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
-                timer.schedule(appLogin, 0);
+                timer.schedule(appLogin, 20 * 1000);
             } else {
                 Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result.getStatusLine().getReasonPhrase(), Toast.LENGTH_LONG).show();
             }

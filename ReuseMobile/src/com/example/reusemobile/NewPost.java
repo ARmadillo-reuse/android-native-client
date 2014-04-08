@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -80,7 +81,7 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
         // Post item
-        new SendPost().execute(name, description, name);
+        new SendPost().execute(name, description, location, tags);
     }
 
     @Override
@@ -99,27 +100,32 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
             String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
             httppost.addHeader("TOKEN", token);
             String name = params[0];
-            String text = params[1];
-            String subject = params[2];
+            String description = params[1];
+            String location = params[2];
+            String tags = params[3];
             try {
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
                 nameValuePairs.add(new BasicNameValuePair("name", name));
-                nameValuePairs.add(new BasicNameValuePair("text", text));
-                nameValuePairs.add(new BasicNameValuePair("subject", subject));
+                nameValuePairs.add(new BasicNameValuePair("description", description));
+                nameValuePairs.add(new BasicNameValuePair("location", location));
+                nameValuePairs.add(new BasicNameValuePair("tags", tags));
                 //nameValuePairs.add(new BasicNameValuePair("gcm_id", "1038751243496"));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
                 // Execute HTTP Post Request
                 HttpResponse response = httpclient.execute(httppost);
-                boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
+                
                 if(response.getStatusLine().getStatusCode() != 200) {
                     return "An error occured in posting the item:\n" + response.getStatusLine().getReasonPhrase();
-                } else if(!wasSuccessful) {
+                }
+                boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
+                if(!wasSuccessful) {
                     return "An error occured in posting the item:\nPost success was false";
                 }
                 
                 return null;
             } catch (Exception e) {
+                Log.e("Post Exception", e.getLocalizedMessage());
                 return "An exception occured during item claim:\n" + e.getLocalizedMessage();
             }
         }
