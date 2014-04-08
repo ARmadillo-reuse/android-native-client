@@ -9,6 +9,8 @@
 
     <TextView
         android:id="@+id/item_name"
+        android:maxLines="2"
+        android:ellipsize="end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -17,18 +19,24 @@
         android:text="Item Name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
-    <TextView
-        android:id="@+id/item_desc"
+    <ScrollView
+        android:id="@+id/item_desc_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/desc_date_label"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/item_name"
         android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="29dp"
-        android:text="Item Description"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:layout_marginRight="20dp" >
+
+        <TextView
+            android:id="@+id/item_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Item Description"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+    </ScrollView>
 
     <Button
         android:id="@+id/claim_button"
