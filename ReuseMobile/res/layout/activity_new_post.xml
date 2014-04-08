@@ -22,7 +22,12 @@
             app:layout_gravity="left|top"
             app:layout_row="0"
             android:ems="10"
-            android:hint="Item Name" />
+            android:hint="Item Name" >
+
+            <requestFocus />
+            <requestFocus />
+
+        </EditText>
 
         <EditText
             android:id="@+id/post_loc"
@@ -33,8 +38,6 @@
             app:layout_row="1"
             android:ems="10"
             android:hint="Item Location" >
-
-            <requestFocus android:layout_width="wrap_content" />
         </EditText>
 
         <EditText

@@ -110,6 +110,10 @@ public class MainStream extends ActionBarActivity {
         if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
             startActivity(new Intent(this, CreateAccount.class));
             finish();
+        } else {
+            // Set a timer to update itemList
+            timer.schedule(refreshTask, 0, updateInterval); // Update every 30 seconds
+            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 minutes
         }
         
         setContentView(R.layout.activity_main_stream);
@@ -163,9 +167,7 @@ public class MainStream extends ActionBarActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
             
-            // Set a timer to update itemList
-            timer.schedule(refreshTask, 0, updateInterval); // Update every 30 seconds
-            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 minutes
+
         }
     }
     
@@ -265,7 +267,7 @@ public class MainStream extends ActionBarActivity {
      */
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
-        intent.putExtra(ITEM_ID, item.id);
+        intent.putExtra(ITEM_ID, item.pk);
         intent.putExtra(ITEM_NAME, item.name);
         intent.putExtra(ITEM_DESCRIPTION, item.description);
         intent.putExtra(ITEM_DATE, item.date.getTime());
@@ -386,15 +388,19 @@ public class MainStream extends ActionBarActivity {
      * the Async pull request.
      */
     private void pullFromServerAndUpdate() {
-            // Pull from server
-            ConnectivityManager connMgr = (ConnectivityManager) 
-                    getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-            if (networkInfo != null && networkInfo.isConnected()) {
-                new PullRequest().execute(""); // Updates on completion
-            } else {
-                Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
-            }
+        // Get date of last update
+        long lastUpdate = PreferenceManager.getDefaultSharedPreferences(this).getLong("lastUpdate", 0);
+
+        
+        // Pull from server
+        ConnectivityManager connMgr = (ConnectivityManager) 
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            new PullRequest().execute(lastUpdate); // Updates on completion
+        } else {
+            Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
+        }
     }
     
     /**
@@ -421,13 +427,17 @@ public class MainStream extends ActionBarActivity {
      * Makes an HTTP GET request to the server, asking for a list of updated
      * items, since a given time.
      */
-    private class PullRequest extends AsyncTask<String, Void, String> {
+    private class PullRequest extends AsyncTask<Long, Void, String> {
         //TODO: Add time param
         
         @Override
-        protected String doInBackground(String... params) {
+        protected String doInBackground(Long... params) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'+'HH:mm", Locale.ENGLISH);
+            String lastUpdate = formatter.format(new Date(params[0]));
+            Log.i("last update", lastUpdate);
+            
             HttpClient httpclient = new DefaultHttpClient();
-            HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=1994-01-01+00:00");
+            HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=" + lastUpdate);
             String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
             httpget.addHeader("USERNAME", email);
             String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
@@ -438,21 +448,41 @@ public class MainStream extends ActionBarActivity {
                 if(response.getStatusLine().getStatusCode() == 200) {
                     // Parse JSON response
                     JSONArray jlist = new JSONArray(EntityUtils.toString(response.getEntity()));
+                    Log.i("Response", jlist.toString());
                     for (int i = 0; i < jlist.length(); i++) {
                         // Parse from JSON to Item
                         JSONObject jsonObject = jlist.getJSONObject(i);
+                        
+                        // Get id
                         Integer id = jsonObject.getInt("pk");
                         JSONObject fields = jsonObject.getJSONObject("fields");
+                        
+                        // Get name and description
                         String name = fields.getString("name");
-                        String desc = name;
+                        String desc = fields.getString("description");
+                        
+                        // Get date
                         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
                         Date date = df.parse(fields.getString("modified"));
+                        
+                        // Get if available, lat, and long
                         Boolean isAvailable = !fields.getBoolean("claimed");
-                        String location = "10-250";
-                        String tags = "tags";
+                        String lat = fields.getString("lat");
+                        String lon = fields.getString("lon");
+                        
+                        String location;
+                        String tags;
+                        if(!fields.getBoolean("is_email")) {
+                            // Expect location, tags
+                            location = fields.getString("location");
+                            tags = fields.getString("tags");
+                        } else {
+                            location = "";
+                            tags = "";
+                        }
                         
                         // Check if item is already in db
-                        Item oldItem = Entity.query(Item.class).where(Query.eql("id", id)).execute();
+                        Item oldItem = Entity.query(Item.class).where(Query.eql("pk", id)).execute();
                         if(oldItem != null) {
                             // Update old item
                             oldItem.name = name;
@@ -465,15 +495,21 @@ public class MainStream extends ActionBarActivity {
                             }
                             oldItem.location = location;
                             oldItem.tags = tags;
+                            oldItem.lat = lat;
+                            oldItem.lon = lon;
                             oldItem.save();
                         } else {
                             // Add new item
-                            Item item = new Item(id, name, desc, date, location, tags, isAvailable);
+                            Item item = new Item(id, name, desc, date, location, tags, isAvailable, lat, lon);
                             item.save();
                         }
                     }
+                    // Set current time as new last update
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putLong("lastUpdate", new Date().getTime()).commit();
+                    
                     return null;
                 } else {
+                    Log.e("Pull Error", String.valueOf(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
                     return "An Error occured in item pull:\n" + response.getStatusLine().getReasonPhrase();
                 }
             } catch (Exception e) {

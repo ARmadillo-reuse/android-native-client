@@ -20,21 +20,20 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
 public class MapView extends ActionBarActivity  {
-    private Map<String, LatLng> buildingLocations;
+//    private Map<String, LatLng> buildingLocations;
+    private Map<Marker, Item> markerToItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
         
-        buildingLocations = new HashMap<String, LatLng>();
-        buildingLocations.put("32", new LatLng(42.361706,-71.090649));
-        buildingLocations.put("10", new LatLng(42.359625,-71.09199));
-        buildingLocations.put("16", new LatLng(42.360426,-71.090595));
+//        buildingLocations = new HashMap<String, LatLng>();
+//        buildingLocations.put("32", new LatLng(42.361706,-71.090649));
+//        buildingLocations.put("10", new LatLng(42.359625,-71.09199));
+//        buildingLocations.put("16", new LatLng(42.360426,-71.090595));
         
         // Get a handle to the Map Fragment
         GoogleMap map = ((SupportMapFragment) getSupportFragmentManager()
@@ -52,29 +51,35 @@ public class MapView extends ActionBarActivity  {
         }
 
         map.setMyLocationEnabled(true);
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(mit, 15));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(mit, 14));
         map.setOnInfoWindowClickListener(new OnInfoWindowClickListener() {
             
             @Override
             public void onInfoWindowClick(Marker marker) {
-                String name = marker.getTitle();
-                String desc = marker.getSnippet();
-                Item item = Entity.query(Item.class).where(Query.eql("description", desc)).execute();
+                Item item = markerToItem.get(marker);
                 displayItemDetails(item);
             }
         });
 
+        markerToItem = new HashMap<Marker, Item>();
         // Add markers for each active item
         for(Item item : itemList) {
             if(item.isAvailable) {
                 String building = item.location.split("-")[0];
                 Log.i("Building", building);
-                LatLng location = buildingLocations.get(building);
-                if(location == null) location = new LatLng(42.358953, -71.091634);
-                map.addMarker(new MarkerOptions()
-                        .title(item.name)
-                        .snippet(item.description)
-                        .position(location));
+                LatLng location;
+                if(item.lat.equals("") || item.lon.equals("")) {
+                    location = null;
+                } else {
+                    location = new LatLng(Double.parseDouble(item.lat), Double.parseDouble(item.lon));
+                }
+                if(location != null) {
+                    Marker marker = map.addMarker(new MarkerOptions()
+                                       .title(item.name)
+                                       .snippet(item.description)
+                                       .position(location));
+                    markerToItem.put(marker, item);
+                }
             }
         }
     }

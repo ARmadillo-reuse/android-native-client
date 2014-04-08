@@ -26,6 +26,7 @@ public class GlobalApplication extends Application {
 //    private Boolean[] available = {true, true, true};
     
     public static String filterPreferences = "com.example.reuse.filters";
+    public static boolean debug = true;
 
     @Override
     public void onCreate() {
@@ -57,7 +58,6 @@ public class GlobalApplication extends Application {
         };
         timer.schedule(task, 0, 60 * 1000); // Check every minute
         
-        // REMOVE ME
-        PreferenceManager.getDefaultSharedPreferences(this).edit().putString("token", "64919ef302e63945b80b171e0ca2ec2c46b889ae301e5491a66b0831").commit();
+
     }
 }
