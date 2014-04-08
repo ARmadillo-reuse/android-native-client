@@ -10,8 +10,10 @@
         android:id="@+id/manage_filters_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/manage_add_button"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true" >
+
     </ListView>
 
     <Button
