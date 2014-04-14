@@ -13,6 +13,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
+import com.example.reusemobile.logging.Sting;
+
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -38,6 +40,12 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         setContentView(R.layout.activity_new_post);
         
     }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -62,16 +70,13 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
     
     public void post(View view) {
         // Post item to server
+        Sting.logButtonPush(this, Sting.POST_BUTTON);
         name = ((TextView) findViewById(R.id.post_name)).getText().toString();
         description = ((TextView) findViewById(R.id.post_desc)).getText().toString();
         location = ((TextView) findViewById(R.id.post_loc)).getText().toString();
         tags = ((TextView) findViewById(R.id.post_tags)).getText().toString();
         if (!name.equals("") && !location.equals("") && !tags.equals("")) {
-            ConfirmPost confirmation = new ConfirmPost();
-            confirmation.message = name + "\n\n" +
-                    description + "\n\n" +
-                    location + "\n\n" + 
-                    tags;
+            ConfirmPost confirmation = ConfirmPost.newInstance(name, description, location, tags);
             confirmation.show(getSupportFragmentManager(), "ConfirmPost");
         } else {
             Toast.makeText(this, "Name, location and tags must be filled", Toast.LENGTH_SHORT).show();

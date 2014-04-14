@@ -1,5 +1,7 @@
 package com.example.reusemobile;
 
+import com.example.reusemobile.logging.Sting;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,6 +29,12 @@ public class AddFilter extends ActionBarActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -47,6 +55,7 @@ public class AddFilter extends ActionBarActivity {
     }
 
     public void create(View view) {
+        Sting.logButtonPush(this, Sting.CREATE_FILTER_BUTTON);
         String name = nameEdit.getText().toString();
         String[] keywords = keywordsEdit.getText().toString().trim().split(" ");
         if (!name.equals("") && keywords.length > 0) {

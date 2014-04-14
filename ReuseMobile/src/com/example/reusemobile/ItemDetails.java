@@ -13,10 +13,13 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
+import com.example.reusemobile.logging.Sting;
+
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
@@ -30,7 +33,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ItemDetails extends ActionBarActivity {
+public class ItemDetails extends ActionBarActivity implements ConfirmClaim.ConfirmClaimListener {
     private TextView nameField;
     private TextView descField;
     private TextView dateField;
@@ -76,6 +79,12 @@ public class ItemDetails extends ActionBarActivity {
             claimButton.setText("Claimed");
         }
     }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
+    }
 
 
     @Override
@@ -100,9 +109,9 @@ public class ItemDetails extends ActionBarActivity {
     
     public void claim(View view) {
         // Process claim action
-        claimButton.setEnabled(false);
-
-        new SendClaim().execute(itemId);
+        Sting.logButtonPush(this, Sting.CLAIM_BUTTON);
+        ConfirmClaim confirmClaim = ConfirmClaim.newInstance(itemName);
+        confirmClaim.show(getSupportFragmentManager(), "ConfirmClaim");
     }
 
     /**
@@ -171,5 +180,18 @@ public class ItemDetails extends ActionBarActivity {
                 Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        claimButton.setEnabled(false);
+        new SendClaim().execute(itemId);
+    }
+
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        // Do Nothing
     }
 }

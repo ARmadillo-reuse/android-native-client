@@ -4,9 +4,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,17 +20,25 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.annotation.TargetApi;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.app.SearchableInfo;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -47,6 +57,7 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.reusemobile.logging.Sting;
 import com.example.reusemobile.model.Item;
 import com.example.reusemobile.views.Drawer;
 import com.google.android.gms.common.ConnectionResult;
@@ -58,6 +69,7 @@ import com.roscopeco.ormdroid.TypeMapper;
 
 public class MainStream extends ActionBarActivity {
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private final static int NOTIFICATION_ID = 12345;
     
     public final static String ITEM_ID = "com.example.reusemobile.ID";
     public final static String ITEM_NAME = "com.example.reusemobile.ITEM_NAME";
@@ -65,12 +77,15 @@ public class MainStream extends ActionBarActivity {
     public final static String ITEM_DATE = "com.example.reusemobile.ITEM_DATE";
     public final static String ITEM_LOCATION = "com.example.reusemobile.ITEM_LOCATION";
     public final static String ITEM_AVAILABLE = "com.example.reusemobile.ITEM_AVAILABLE";
+    public final static String NOTIFICATION_FILTER = "com.example.reusemobile.NOTIFICATION_FILTER";
     public final static String FILTERS = "com.example.reusemobile.FILTERS";
     
     public DrawerLayout mDrawerLayout;
     public ActionBarDrawerToggle mDrawerToggle;
     public ListView itemList;
     public Drawer drawer;
+    
+    private static Context appContext;
     
     private String[] currentKeywords;
     private Timer timer = new Timer();
@@ -117,8 +132,10 @@ public class MainStream extends ActionBarActivity {
         }
         
         setContentView(R.layout.activity_main_stream);
+        appContext = getApplicationContext();
         
         if(checkPlayServices()) {
+   
             itemList = (ListView) findViewById(R.id.stream);
             drawer = new Drawer(this);
             
@@ -174,6 +191,7 @@ public class MainStream extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Sting.logActivityStart(this);
         // Check if user is verified
         if(checkPlayServices()) {
             if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
@@ -195,9 +213,11 @@ public class MainStream extends ActionBarActivity {
         if ( keyCode == KeyEvent.KEYCODE_MENU ) {
             if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
                 // Close the drawer
+                Sting.logButtonPush(this, Sting.DRAWER_CLOSE_MENU_BUTTON);
                 mDrawerLayout.closeDrawers();
             } else {
                 // Open the drawer
+                Sting.logButtonPush(this, Sting.DRAWER_OPEN_MENU_BUTTON);
                 mDrawerLayout.openDrawer(Gravity.LEFT);
             }
             return true;
@@ -222,6 +242,11 @@ public class MainStream extends ActionBarActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (mDrawerToggle.onOptionsItemSelected(item)) {
+            if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
+                Sting.logButtonPush(this, Sting.DRAWER_OPEN_BUTTON);
+            } else {
+                Sting.logButtonPush(this, Sting.DRAWER_CLOSE_BUTTON);
+            }
             return true;
         }
         
@@ -233,6 +258,7 @@ public class MainStream extends ActionBarActivity {
             startActivity(intent);
             return true;
         case R.id.action_search:
+            Sting.logButtonPush(this, Sting.SEARCH_BUTTON);
             return true;
         case R.id.action_settings:
             return super.onOptionsItemSelected(item);
@@ -378,6 +404,9 @@ public class MainStream extends ActionBarActivity {
             String query = intent.getStringExtra(SearchManager.QUERY);
             currentKeywords = query.trim().split(" ");
             refreshItems();
+        } else if(intent.hasExtra(NOTIFICATION_FILTER)){
+            String filter = intent.getStringExtra(NOTIFICATION_FILTER);
+            applyFilter(filter);
         } else {
             showAll();
         }
@@ -400,6 +429,86 @@ public class MainStream extends ActionBarActivity {
             new PullRequest().execute(lastUpdate); // Updates on completion
         } else {
             Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private static void processItemUpdate(Integer pk, String name, String description,
+            Date date, String location, String tags, Boolean isAvailable, String lat, String lon) {
+        // Check if item is already in db
+        Item oldItem = Entity.query(Item.class).where(Query.eql("pk", pk)).execute();
+        if(oldItem != null) {
+            // Update old item
+            oldItem.name = name;
+            oldItem.description = description;
+            oldItem.date = date;
+            if(!isAvailable) {
+                oldItem.markAsClaimed();
+            } else {
+                oldItem.isAvailable = isAvailable;
+            }
+            oldItem.location = location;
+            oldItem.tags = tags;
+            oldItem.lat = lat;
+            oldItem.lon = lon;
+            oldItem.save();
+        } else {
+            // Add new item
+            Item item = new Item(pk, name, description, date, location, tags, isAvailable, lat, lon);
+            item.save();
+            checkIfShouldNotify(item);
+        }
+    }
+    
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    private static void checkIfShouldNotify(Item item) {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(appContext);
+        if(pref.getBoolean("notifications_new_item", true)) {
+            
+            Set<String> notifyFilters = pref.getStringSet("notifications_filters", new HashSet<String>());
+            for(String filter : notifyFilters) {
+                String[] tags = appContext.getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
+                for(String tag : tags) {
+                    if(item.name.toLowerCase(Locale.ENGLISH).contains(tag) ||
+                       item.description.toLowerCase(Locale.ENGLISH).contains(tag) ||
+                       item.tags.toLowerCase(Locale.ENGLISH).contains(tag) ||
+                       item.location.toLowerCase(Locale.ENGLISH).contains(tag)) {
+                        
+                        NotificationCompat.Builder mBuilder =
+                                new NotificationCompat.Builder(appContext)
+                                .setSmallIcon(R.drawable.ic_notification)
+                                .setContentTitle("New '" + filter + "' Item Available!")
+                                .setContentText("Click here to view new item")
+                                .setAutoCancel(true);
+                        // Set notification settings
+                        if(pref.getBoolean("notifications_new_item_vibrate", true)) mBuilder.setVibrate(new long[] {0, 500});
+                        mBuilder.setSound(Uri.parse(pref.getString("notifications_new_item_ringtone", "content://settings/system/notification_sound")));
+                        
+                        // Creates an explicit intent for an Activity in your app
+                        Intent resultIntent = new Intent(appContext, MainStream.class);
+                        resultIntent.putExtra(NOTIFICATION_FILTER, filter);
+    
+                        // The stack builder object will contain an artificial back stack for the
+                        // started Activity.
+                        // This ensures that navigating backward from the Activity leads out of
+                        // your application to the Home screen.
+                        TaskStackBuilder stackBuilder = TaskStackBuilder.create(appContext);
+                        // Adds the back stack for the Intent (but not the Intent itself)
+                        stackBuilder.addParentStack(ItemDetails.class);
+                        // Adds the Intent that starts the Activity to the top of the stack
+                        stackBuilder.addNextIntent(resultIntent);
+                        PendingIntent resultPendingIntent =
+                                stackBuilder.getPendingIntent(
+                                    0,
+                                    PendingIntent.FLAG_UPDATE_CURRENT
+                                );
+                        mBuilder.setContentIntent(resultPendingIntent);
+                        NotificationManager mNotificationManager =
+                            (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                        // mId allows you to update the notification later on.
+                        mNotificationManager.notify(NOTIFICATION_ID + filter.hashCode(), mBuilder.build());
+                    }
+                }
+            }
         }
     }
     
@@ -438,9 +547,9 @@ public class MainStream extends ActionBarActivity {
             
             HttpClient httpclient = new DefaultHttpClient();
             HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=" + lastUpdate);
-            String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
+            String email = PreferenceManager.getDefaultSharedPreferences(appContext).getString("username", "");
             httpget.addHeader("USERNAME", email);
-            String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
+            String token = PreferenceManager.getDefaultSharedPreferences(appContext).getString("token", "");
             httpget.addHeader("TOKEN", token);
             try {
                 // Execute HTTP Get Request
@@ -481,31 +590,10 @@ public class MainStream extends ActionBarActivity {
                             tags = "";
                         }
                         
-                        // Check if item is already in db
-                        Item oldItem = Entity.query(Item.class).where(Query.eql("pk", id)).execute();
-                        if(oldItem != null) {
-                            // Update old item
-                            oldItem.name = name;
-                            oldItem.description = desc;
-                            oldItem.date = date;
-                            if(!isAvailable) {
-                                oldItem.markAsClaimed();
-                            } else {
-                                oldItem.isAvailable = isAvailable;
-                            }
-                            oldItem.location = location;
-                            oldItem.tags = tags;
-                            oldItem.lat = lat;
-                            oldItem.lon = lon;
-                            oldItem.save();
-                        } else {
-                            // Add new item
-                            Item item = new Item(id, name, desc, date, location, tags, isAvailable, lat, lon);
-                            item.save();
-                        }
+                        MainStream.processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon);
                     }
                     // Set current time as new last update
-                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putLong("lastUpdate", new Date().getTime()).commit();
+                    PreferenceManager.getDefaultSharedPreferences(appContext).edit().putLong("lastUpdate", new Date().getTime()).commit();
                     
                     return null;
                 } else {
@@ -524,7 +612,7 @@ public class MainStream extends ActionBarActivity {
             if(result == null) {
                 refreshItems();
             } else {
-                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+                Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
         }
         

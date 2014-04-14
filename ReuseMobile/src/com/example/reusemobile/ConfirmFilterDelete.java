@@ -8,9 +8,6 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 
 public class ConfirmFilterDelete extends DialogFragment {
-    public String filter;
-    public String tags;
-    
     public interface ConfirmFilterDeleteListener {
         public void onDialogPositiveClick(DialogFragment dialog, String filter);
         public void onDialogNegativeClick(DialogFragment dialog);
@@ -18,6 +15,18 @@ public class ConfirmFilterDelete extends DialogFragment {
     
     ConfirmFilterDeleteListener mListener;
     
+    public static ConfirmFilterDelete newInstance(String filter, String tags) {
+        String message = "Are you sure you want to delete filter:\n\n" +
+                         filter + "\n\n" +
+                         "With tags:\n" +
+                         tags;
+        Bundle bdl = new Bundle(2);
+        bdl.putString("message", message);
+        bdl.putString("filter", filter);
+        ConfirmFilterDelete instance = new ConfirmFilterDelete();
+        instance.setArguments(bdl);
+        return instance;
+    }
     
     @Override
     public void onAttach(Activity activity) {
@@ -38,11 +47,10 @@ public class ConfirmFilterDelete extends DialogFragment {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Confirm Filter Delete")
-               .setMessage("Are you sure you want to delete filter:\n\n" + filter + "\n\n" +
-                           "With tags:\n" + tags)
+               .setMessage(getArguments().getString("message"))
                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                       mListener.onDialogPositiveClick(ConfirmFilterDelete.this, filter);
+                       mListener.onDialogPositiveClick(ConfirmFilterDelete.this, getArguments().getString("filter"));
                    }
                })
                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

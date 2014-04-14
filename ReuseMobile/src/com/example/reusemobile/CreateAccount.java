@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -14,8 +15,14 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
+import com.example.reusemobile.logging.Sting;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -23,6 +30,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,6 +40,16 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class CreateAccount extends ActionBarActivity {
+    // GCM Stuff
+    public static final String EXTRA_MESSAGE = "message";
+    public static final String PROPERTY_REG_ID = "registration_id";
+    private static final String PROPERTY_APP_VERSION = "appVersion";
+    String SENDER_ID = "1038751243496";
+    static final String TAG = "ReuseMobile";
+    GoogleCloudMessaging gcm;
+    AtomicInteger msgId = new AtomicInteger();
+    String regid;
+    
     private Timer timer = new Timer();
     private TimerTask appLogin = new TimerTask() {
         
@@ -61,6 +79,17 @@ public class CreateAccount extends ActionBarActivity {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment()).commit();
         }
+        
+        //  GCM registration.
+        gcm = GoogleCloudMessaging.getInstance(this);
+        regid = getRegistrationId(getApplicationContext());
+         
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
     }
 
     @Override
@@ -120,38 +149,146 @@ public class CreateAccount extends ActionBarActivity {
             return rootView;
         }
     }
+    
+    /**
+     * Gets the current registration ID for application on GCM service.
+     * <p>
+     * If result is empty, the app needs to register.
+     *
+     * @return registration ID, or empty string if there is no existing
+     *         registration ID.
+     */
+    private String getRegistrationId(Context context) {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String registrationId = prefs.getString(PROPERTY_REG_ID, "");
+        if (registrationId.equals("")) {
+            Log.i(TAG, "Registration not found.");
+            return "";
+        }
+        // Check if app was updated; if so, it must clear the registration ID
+        // since the existing regID is not guaranteed to work with the new
+        // app version.
+        int registeredVersion = prefs.getInt(PROPERTY_APP_VERSION, Integer.MIN_VALUE);
+        int currentVersion = getAppVersion(context);
+        if (registeredVersion != currentVersion) {
+            Log.i(TAG, "App version changed.");
+            return "";
+        }
+        return registrationId;
+    }
+    
+    /**
+     * @return Application's version code from the {@code PackageManager}.
+     */
+    private static int getAppVersion(Context context) {
+        try {
+            PackageInfo packageInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return packageInfo.versionCode;
+        } catch (NameNotFoundException e) {
+            // should never happen
+            throw new RuntimeException("Could not get package name: " + e);
+        }
+    }
+    
+    /**
+     * Registers the application with GCM servers asynchronously.
+     * <p>
+     * Stores the registration ID and app versionCode in the application's
+     * shared preferences.
+     */
+    private boolean registerForGCM() {
+        boolean wasSuccessful;
+        try {
+            if (gcm == null) {
+                gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
+            }
+            regid = gcm.register(SENDER_ID);
+            final String msg = "Device registered, registration ID=" + regid;
+            if(GlobalApplication.debug) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            // Persist the regID - no need to register again.
+            storeRegistrationId(getApplicationContext(), regid);
+            wasSuccessful = true;
+        } catch (IOException ex) {
+            final String msg = "Error :" + ex.getMessage();
+            if(GlobalApplication.debug) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+            // If there is an error, don't just keep trying to register.
+            // Require the user to click a button again, or perform
+            // exponential back-off.
+            wasSuccessful = false;
+        }
+        return wasSuccessful;
+    }
+    
+    /**
+     * Stores the registration ID and app versionCode in the application's
+     * {@code SharedPreferences}.
+     *
+     * @param context application's context.
+     * @param regId registration ID
+     */
+    private void storeRegistrationId(Context context, String regId) {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int appVersion = getAppVersion(context);
+        Log.i(TAG, "Saving regId on app version " + appVersion);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(PROPERTY_REG_ID, regId);
+        editor.putInt(PROPERTY_APP_VERSION, appVersion);
+        editor.commit();
+    }
 
     
-    private class SendLogin extends AsyncTask<String, Void, HttpResponse> {
+    private class SendLogin extends AsyncTask<String, Void, String> {
         String email;
         
         @Override
-        protected HttpResponse doInBackground(String... params) {
+        protected String doInBackground(String... params) {
          // Create a new HttpClient and Post Header
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:8000/api/login/signup/");
             email = params[0];
+            if(regid.equals("")) {
+                if (!registerForGCM()) return "Error in GCM Registration";
+            }
             try {
                 // Add your data
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
                 nameValuePairs.add(new BasicNameValuePair("email", email));
-                //nameValuePairs.add(new BasicNameValuePair("gcm_id", "1038751243496"));
+                nameValuePairs.add(new BasicNameValuePair("gcm_id", regid));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
                 // Execute HTTP Post Request
                 HttpResponse response = httpclient.execute(httppost);
-                
-                return response;
+                if(response.getStatusLine().getStatusCode() == 200) {
+                    return "Successful";
+                } else {
+                    return response.getStatusLine().getReasonPhrase();
+                }
             } catch (IOException e) {
-                return null;
+                return "Exception: " + e.getLocalizedMessage();
             }
         }
 
         @Override
-        protected void onPostExecute(HttpResponse result) {
+        protected void onPostExecute(String result) {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
-            if(result.getStatusLine().getStatusCode() == 200) {
+            if(result.equals("Successful")) {
                 // REMOVE ME
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean("isVerified", true).commit();
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("username", email).commit();
@@ -167,7 +304,7 @@ public class CreateAccount extends ActionBarActivity {
                 Toast.makeText(getApplicationContext(), "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
                 timer.schedule(appLogin, 20 * 1000);
             } else {
-                Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result.getStatusLine().getReasonPhrase(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result, Toast.LENGTH_LONG).show();
             }
         }
         

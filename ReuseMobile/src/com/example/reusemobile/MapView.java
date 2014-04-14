@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.reusemobile.logging.Sting;
 import com.example.reusemobile.model.Item;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -82,6 +83,12 @@ public class MapView extends ActionBarActivity  {
                 }
             }
         }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
     }
 
     @Override

@@ -8,6 +8,7 @@ import android.app.Application;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.example.reusemobile.logging.Sting;
 import com.example.reusemobile.model.Item;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
