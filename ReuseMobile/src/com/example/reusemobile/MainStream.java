@@ -2,6 +2,7 @@ package com.example.reusemobile;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,7 +90,7 @@ public class MainStream extends ActionBarActivity {
     
     private String[] currentKeywords;
     private Timer timer = new Timer();
-    private int updateInterval = 30 * 1000;
+    private int refreshInterval = 30 * 1000; // Refresh every 30 seconds
     private TimerTask refreshTask = new TimerTask() {
         @Override
         public void run() {
@@ -103,7 +104,7 @@ public class MainStream extends ActionBarActivity {
 
         }
     };
-    private int pullInterval = 1 * 60 * 1000;
+    private int pullInterval = 30 * 60 * 1000; // Pull every 30 minutes
     private TimerTask pullFromServerTask = new TimerTask() {
         @Override
         public void run() {
@@ -111,7 +112,8 @@ public class MainStream extends ActionBarActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    pullFromServerAndUpdate();
+                    pullFromServer();
+                    refreshItems();
                 }
             });
         }
@@ -127,8 +129,8 @@ public class MainStream extends ActionBarActivity {
             finish();
         } else {
             // Set a timer to update itemList
-            timer.schedule(refreshTask, 0, updateInterval); // Update every 30 seconds
-            timer.schedule(pullFromServerTask, 0, pullInterval); // Update every 30 minutes
+            timer.schedule(refreshTask, 0, refreshInterval);
+            timer.schedule(pullFromServerTask, 0, pullInterval);
         }
         
         setContentView(R.layout.activity_main_stream);
@@ -198,7 +200,8 @@ public class MainStream extends ActionBarActivity {
                 startActivity(new Intent(this, CreateAccount.class));
                 finish();
             } else {
-                pullFromServerAndUpdate();
+                pullFromServer();
+                refreshItems();
             }
         }
     }
@@ -243,9 +246,9 @@ public class MainStream extends ActionBarActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (mDrawerToggle.onOptionsItemSelected(item)) {
             if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
-                Sting.logButtonPush(this, Sting.DRAWER_OPEN_BUTTON);
-            } else {
                 Sting.logButtonPush(this, Sting.DRAWER_CLOSE_BUTTON);
+            } else {
+                Sting.logButtonPush(this, Sting.DRAWER_OPEN_BUTTON);
             }
             return true;
         }
@@ -255,14 +258,15 @@ public class MainStream extends ActionBarActivity {
         case R.id.action_map_view:
             Intent intent = new Intent(this, MapView.class);
             intent.putExtra(FILTERS, currentKeywords);
+            Sting.logButtonPush(this, Sting.ACTION_MAP);
             startActivity(intent);
             return true;
         case R.id.action_search:
-            Sting.logButtonPush(this, Sting.SEARCH_BUTTON);
             return true;
         case R.id.action_settings:
             return super.onOptionsItemSelected(item);
         case R.id.action_new_post:
+            Sting.logButtonPush(this, Sting.ACTION_NEW_POST);
             startActivity(new Intent(this, NewPost.class));
         default:
             return super.onOptionsItemSelected(item);
@@ -307,6 +311,7 @@ public class MainStream extends ActionBarActivity {
      */
     public void showAll() {
         currentKeywords = new String[0];
+        setTitle("All Items");
         refreshItems();
     }
     
@@ -318,6 +323,7 @@ public class MainStream extends ActionBarActivity {
     public void applyFilter(String filter) {
         String[] keywords = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
         currentKeywords = keywords;
+        setTitle("Filtered Items");
         refreshItems();
     }
     
@@ -403,6 +409,8 @@ public class MainStream extends ActionBarActivity {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             currentKeywords = query.trim().split(" ");
+            setTitle("Filtered Items");
+            Sting.logButtonPush(this, Sting.DISPLAY_SEARCH + " " + Arrays.toString(currentKeywords));
             refreshItems();
         } else if(intent.hasExtra(NOTIFICATION_FILTER)){
             String filter = intent.getStringExtra(NOTIFICATION_FILTER);
@@ -416,19 +424,19 @@ public class MainStream extends ActionBarActivity {
      * Ensures the app can connect to the network service and issued
      * the Async pull request.
      */
-    private void pullFromServerAndUpdate() {
+    public static void pullFromServer() {
         // Get date of last update
-        long lastUpdate = PreferenceManager.getDefaultSharedPreferences(this).getLong("lastUpdate", 0);
+        long lastUpdate = PreferenceManager.getDefaultSharedPreferences(appContext).getLong("lastUpdate", 0);
 
         
         // Pull from server
         ConnectivityManager connMgr = (ConnectivityManager) 
-                getSystemService(Context.CONNECTIVITY_SERVICE);
+                appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             new PullRequest().execute(lastUpdate); // Updates on completion
         } else {
-            Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(appContext, "No network connection available.", Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -473,6 +481,7 @@ public class MainStream extends ActionBarActivity {
                        item.tags.toLowerCase(Locale.ENGLISH).contains(tag) ||
                        item.location.toLowerCase(Locale.ENGLISH).contains(tag)) {
                         
+                        //Sting.logNotificationEvent((Activity) appContext, filter);
                         NotificationCompat.Builder mBuilder =
                                 new NotificationCompat.Builder(appContext)
                                 .setSmallIcon(R.drawable.ic_notification)
@@ -536,17 +545,16 @@ public class MainStream extends ActionBarActivity {
      * Makes an HTTP GET request to the server, asking for a list of updated
      * items, since a given time.
      */
-    private class PullRequest extends AsyncTask<Long, Void, String> {
-        //TODO: Add time param
-        
+    private static class PullRequest extends AsyncTask<Long, Void, String> {
         @Override
         protected String doInBackground(Long... params) {
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'+'HH:mm", Locale.ENGLISH);
             String lastUpdate = formatter.format(new Date(params[0]));
             Log.i("last update", lastUpdate);
             
+            String port = GlobalApplication.serverPort;
             HttpClient httpclient = new DefaultHttpClient();
-            HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:8000/api/thread/get/?after=" + lastUpdate);
+            HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:" + port + "/api/thread/get/?after=" + lastUpdate);
             String email = PreferenceManager.getDefaultSharedPreferences(appContext).getString("username", "");
             httpget.addHeader("USERNAME", email);
             String token = PreferenceManager.getDefaultSharedPreferences(appContext).getString("token", "");
@@ -597,10 +605,13 @@ public class MainStream extends ActionBarActivity {
                     
                     return null;
                 } else {
+                    //Sting.logError((Activity) appContext, Sting.PULL_ERROR,
+                    //        String.valueOf(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
                     Log.e("Pull Error", String.valueOf(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
                     return "An Error occured in item pull:\n" + response.getStatusLine().getReasonPhrase();
                 }
             } catch (Exception e) {
+                //Sting.logError((Activity) appContext, Sting.PULL_ERROR, "Exception: " + e.getLocalizedMessage());
                 Log.i("Exception", e.getLocalizedMessage());
                 return "An exception occured:\n" + e.getLocalizedMessage();
             }
@@ -610,9 +621,8 @@ public class MainStream extends ActionBarActivity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if(result == null) {
-                refreshItems();
             } else {
-                Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
+                if(GlobalApplication.debug) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
         }
         

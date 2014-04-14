@@ -51,17 +51,17 @@ public class CreateAccount extends ActionBarActivity {
     String regid;
     
     private Timer timer = new Timer();
-    private TimerTask appLogin = new TimerTask() {
+    private TimerTask verifiedChecker = new TimerTask() {
         
         @Override
         public void run() {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
-
-                    startActivity(new Intent(getApplicationContext(), MainStream.class));
-                    finish();
+                    if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("isVerified", false)) {
+                        startActivity(new Intent(getApplicationContext(), MainStream.class));
+                        finish();
+                    }
                 }
             });
 
@@ -83,7 +83,7 @@ public class CreateAccount extends ActionBarActivity {
         //  GCM registration.
         gcm = GoogleCloudMessaging.getInstance(this);
         regid = getRegistrationId(getApplicationContext());
-         
+        timer.schedule(verifiedChecker, 0, 30 * 1000);
     }
     
     @Override
@@ -259,8 +259,9 @@ public class CreateAccount extends ActionBarActivity {
         @Override
         protected String doInBackground(String... params) {
          // Create a new HttpClient and Post Header
+            String port = GlobalApplication.serverPort;
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:8000/api/login/signup/");
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/login/signup/");
             email = params[0];
             if(regid.equals("")) {
                 if (!registerForGCM()) return "Error in GCM Registration";
@@ -271,6 +272,7 @@ public class CreateAccount extends ActionBarActivity {
                 nameValuePairs.add(new BasicNameValuePair("email", email));
                 nameValuePairs.add(new BasicNameValuePair("gcm_id", regid));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                Log.i("Reg ID", regid);
 
                 // Execute HTTP Post Request
                 HttpResponse response = httpclient.execute(httppost);
@@ -289,20 +291,17 @@ public class CreateAccount extends ActionBarActivity {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
             if(result.equals("Successful")) {
-                // REMOVE ME
-                PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean("isVerified", true).commit();
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("username", email).commit();
-                if(email.equals("crogers3@mit.edu")) {
-                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "64919ef302e63945b80b171e0ca2ec2c46b889ae301e5491a66b0831").commit();
-                } else if(email.equals("shaladi@mit.edu")) {
-                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "abdcb57ca3fb20f73e4d7c4546a43ce869b1217a368864ffec86ae82").commit();
-                } else if(email.equals("manting@mit.edu")) {
-                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "079646d723d12daaba4449789bd7ba8021c26953dcc09d5c017eed7f").commit();
-                } else if(email.equals("akonradi@mit.edu")) {
-                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "1831ef98490487f93463bbdfb81bb8a0ee483a38ad6c79a05f10b69b").commit();
-                }
+//                if(email.equals("crogers3@mit.edu")) {
+//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "64919ef302e63945b80b171e0ca2ec2c46b889ae301e5491a66b0831").commit();
+//                } else if(email.equals("shaladi@mit.edu")) {
+//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "abdcb57ca3fb20f73e4d7c4546a43ce869b1217a368864ffec86ae82").commit();
+//                } else if(email.equals("manting@mit.edu")) {
+//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "079646d723d12daaba4449789bd7ba8021c26953dcc09d5c017eed7f").commit();
+//                } else if(email.equals("akonradi@mit.edu")) {
+//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "1831ef98490487f93463bbdfb81bb8a0ee483a38ad6c79a05f10b69b").commit();
+//                }
                 Toast.makeText(getApplicationContext(), "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
-                timer.schedule(appLogin, 20 * 1000);
             } else {
                 Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result, Toast.LENGTH_LONG).show();
             }

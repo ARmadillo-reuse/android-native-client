@@ -5,10 +5,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Application;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.example.reusemobile.logging.Sting;
 import com.example.reusemobile.model.Item;
 import com.roscopeco.ormdroid.Entity;
 import com.roscopeco.ormdroid.ORMDroidApplication;
@@ -28,6 +26,7 @@ public class GlobalApplication extends Application {
     
     public static String filterPreferences = "com.example.reuse.filters";
     public static boolean debug = true;
+    public static String serverPort = "8001";
 
     @Override
     public void onCreate() {
@@ -57,7 +56,7 @@ public class GlobalApplication extends Application {
                 }
             }
         };
-        timer.schedule(task, 0, 60 * 1000); // Check every minute
+        timer.schedule(task, 0, 15 * 60 * 1000); // Check every 15 minutes
         
 
     }

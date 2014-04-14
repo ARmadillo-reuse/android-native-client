@@ -13,8 +13,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
-import com.example.reusemobile.logging.Sting;
-
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -33,6 +32,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.reusemobile.logging.Sting;
+
 public class ItemDetails extends ActionBarActivity implements ConfirmClaim.ConfirmClaimListener {
     private TextView nameField;
     private TextView descField;
@@ -46,11 +47,14 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
     private Long itemDate;
     private String itemLocation;
     private Boolean itemAvailable;
+    
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_details);
+        activity = this;
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -104,6 +108,13 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         if (id == R.id.action_settings) {
             return true;
         }
+        if (id == R.id.action_map_view) {
+            Intent intent = new Intent(this, MapView.class);
+            intent.putExtra(MainStream.ITEM_ID, itemId);
+            Sting.logButtonPush(this, Sting.ACTION_MAP);
+            startActivity(intent);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
     
@@ -137,8 +148,9 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         @Override
         protected String doInBackground(Integer... params) {
          // Create a new HttpClient and Post Header
+            String port = GlobalApplication.serverPort;
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:8000/api/thread/claim/");
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/claim/");
             String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
             httppost.addHeader("USERNAME", email);
             String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
@@ -155,15 +167,18 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
                 
                 if(response.getStatusLine().getStatusCode() != 200) {
                     Log.e("Item Details", String.valueOf(itemId));
+                    Sting.logError(activity, Sting.CLAIM_ERROR, response.getStatusLine().getReasonPhrase());
                     return "An error occured in item claim:\n" + response.getStatusLine().getReasonPhrase();
                 }
                 boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
                 if(!wasSuccessful) {
+                    Sting.logError(activity, Sting.CLAIM_ERROR, "Item Already Claimed");
                     return "Item claim failed:\nThe item was already claimed :'(";
                 }
                 
                 return null;
             } catch (Exception e) {
+                Sting.logError(activity, Sting.CLAIM_ERROR, "Exception: " + e.getLocalizedMessage());
                 return "An exception occured during item claim:\n" + e.getLocalizedMessage();
             }
         }

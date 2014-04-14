@@ -1,5 +1,7 @@
 package com.example.reusemobile.views;
 
+import java.util.Arrays;
+
 import android.content.Intent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,6 +15,7 @@ import com.example.reusemobile.ManageFilters;
 import com.example.reusemobile.NewPost;
 import com.example.reusemobile.R;
 import com.example.reusemobile.SettingsActivity;
+import com.example.reusemobile.logging.Sting;
 
 public class Drawer{
     public ListView header;
@@ -47,6 +50,7 @@ public class Drawer{
                     int position, long id) {
                 // Show all items
                 activity.showAll();
+                Sting.logButtonPush(activity, Sting.DISPLAY_ALL);
                 activity.mDrawerLayout.closeDrawers();
             }
         });
@@ -57,6 +61,7 @@ public class Drawer{
                 // Apply selected filter
                 String filter = (String) parent.getItemAtPosition(position);
                 activity.applyFilter(filter);
+                Sting.logButtonPush(activity, Sting.DISPLAY_FILTER + " " + filter);
                 activity.mDrawerLayout.closeDrawers();
             }
         });
@@ -67,12 +72,15 @@ public class Drawer{
                 String selection = (String) parent.getItemAtPosition(position);
                 if (selection.equals(activity.getResources().getString(R.string.drawer_manage))) {
                     // Manage filters
+                    Sting.logButtonPush(activity, Sting.DRAWER_MANAGE_FILTERS);
                     activity.startActivity(new Intent(activity, ManageFilters.class));
                 } else if (selection.equals(activity.getResources().getString(R.string.drawer_new))) {
                     // New Post
+                    Sting.logButtonPush(activity, Sting.DRAWER_NEW_POST);
                     activity.startActivity(new Intent(activity, NewPost.class));
                 } else if (selection.equals(activity.getResources().getString(R.string.drawer_settings))) {
                     // Settings
+                    Sting.logButtonPush(activity, Sting.DRAWER_SETTINGS);
                     activity.startActivity(new Intent(activity, SettingsActivity.class));
                 } else {
                     throw new RuntimeException("Unknown footer action selection");
