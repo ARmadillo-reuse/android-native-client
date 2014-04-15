@@ -21,7 +21,7 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.SearchManager;
@@ -467,7 +467,7 @@ public class MainStream extends ActionBarActivity {
         }
     }
     
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @SuppressLint("NewApi")
     private static void checkIfShouldNotify(Item item) {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(appContext);
         if(pref.getBoolean("notifications_new_item", true)) {
@@ -496,20 +496,31 @@ public class MainStream extends ActionBarActivity {
                         Intent resultIntent = new Intent(appContext, MainStream.class);
                         resultIntent.putExtra(NOTIFICATION_FILTER, filter);
     
-                        // The stack builder object will contain an artificial back stack for the
-                        // started Activity.
-                        // This ensures that navigating backward from the Activity leads out of
-                        // your application to the Home screen.
-                        TaskStackBuilder stackBuilder = TaskStackBuilder.create(appContext);
-                        // Adds the back stack for the Intent (but not the Intent itself)
-                        stackBuilder.addParentStack(ItemDetails.class);
-                        // Adds the Intent that starts the Activity to the top of the stack
-                        stackBuilder.addNextIntent(resultIntent);
-                        PendingIntent resultPendingIntent =
-                                stackBuilder.getPendingIntent(
-                                    0,
-                                    PendingIntent.FLAG_UPDATE_CURRENT
-                                );
+                        PendingIntent resultPendingIntent;
+                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            // The stack builder object will contain an artificial back stack for the
+                            // started Activity.
+                            // This ensures that navigating backward from the Activity leads out of
+                            // your application to the Home screen.
+                            TaskStackBuilder stackBuilder = TaskStackBuilder.create(appContext);
+                            // Adds the back stack for the Intent (but not the Intent itself)
+                            stackBuilder.addParentStack(ItemDetails.class);
+                            // Adds the Intent that starts the Activity to the top of the stack
+                            stackBuilder.addNextIntent(resultIntent);
+                            resultPendingIntent =
+                                    stackBuilder.getPendingIntent(
+                                        0,
+                                        PendingIntent.FLAG_UPDATE_CURRENT
+                                    );
+                        } else {
+                            resultPendingIntent = PendingIntent.getActivity(
+                                            appContext,
+                                            0,
+                                            resultIntent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT
+                                        );
+                        }
+
                         mBuilder.setContentIntent(resultPendingIntent);
                         NotificationManager mNotificationManager =
                             (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);

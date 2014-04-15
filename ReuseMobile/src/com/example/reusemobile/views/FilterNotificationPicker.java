@@ -17,5 +17,4 @@ public class FilterNotificationPicker extends MultiSelectListPreference {
         setEntries(ManageFilters.getSortedFilters(getContext()).toArray(new String[0]));
         setEntryValues(ManageFilters.getSortedFilters(getContext()).toArray(new String[0]));
     }
-    
 }
