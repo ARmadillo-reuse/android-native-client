@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.reusemobile.ItemDetails" >
 
+    <item 
+        android:id="@+id/action_map_view"
+        app:showAsAction="ifRoom"
+        android:title="@string/action_map_view"
+        android:icon="@drawable/ic_action_place"/>
+    
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"

@@ -13,6 +13,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,17 +27,27 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.reusemobile.logging.Sting;
+
 public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPostListener{
     private String name;
     private String description;
     private String location;
     private String tags;
+    
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_post);
-        
+        activity = this;
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
     }
 
     @Override
@@ -62,16 +73,13 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
     
     public void post(View view) {
         // Post item to server
+        Sting.logButtonPush(this, Sting.POST_BUTTON);
         name = ((TextView) findViewById(R.id.post_name)).getText().toString();
         description = ((TextView) findViewById(R.id.post_desc)).getText().toString();
         location = ((TextView) findViewById(R.id.post_loc)).getText().toString();
         tags = ((TextView) findViewById(R.id.post_tags)).getText().toString();
         if (!name.equals("") && !location.equals("") && !tags.equals("")) {
-            ConfirmPost confirmation = new ConfirmPost();
-            confirmation.message = name + "\n\n" +
-                    description + "\n\n" +
-                    location + "\n\n" + 
-                    tags;
+            ConfirmPost confirmation = ConfirmPost.newInstance(name, description, location, tags);
             confirmation.show(getSupportFragmentManager(), "ConfirmPost");
         } else {
             Toast.makeText(this, "Name, location and tags must be filled", Toast.LENGTH_SHORT).show();
@@ -93,8 +101,9 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         @Override
         protected String doInBackground(String... params) {
          // Create a new HttpClient and Post Header
+            String port = GlobalApplication.serverPort;
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:8000/api/thread/post/");
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/post/");
             String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
             httppost.addHeader("USERNAME", email);
             String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
@@ -116,16 +125,19 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
                 HttpResponse response = httpclient.execute(httppost);
                 
                 if(response.getStatusLine().getStatusCode() != 200) {
+                    Sting.logError(activity, Sting.POST_ERROR, response.getStatusLine().getReasonPhrase());
                     return "An error occured in posting the item:\n" + response.getStatusLine().getReasonPhrase();
                 }
                 boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
                 if(!wasSuccessful) {
+                    Sting.logError(activity, Sting.POST_ERROR, "Post success was false");
                     return "An error occured in posting the item:\nPost success was false";
                 }
                 
                 return null;
             } catch (Exception e) {
                 Log.e("Post Exception", e.getLocalizedMessage());
+                Sting.logError(activity, Sting.POST_ERROR, "Exception: " + e.getLocalizedMessage());
                 return "An exception occured during item claim:\n" + e.getLocalizedMessage();
             }
         }

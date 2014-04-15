@@ -58,7 +58,7 @@
             app:layout_gravity="left|top"
             app:layout_row="3"
             android:ems="10"
-            android:hint="Tags"
+            android:hint="Tags (space separated)"
             android:inputType="textMultiLine" />
 
         <TextView

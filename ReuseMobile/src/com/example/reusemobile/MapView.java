@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.reusemobile.logging.Sting;
 import com.example.reusemobile.model.Item;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -20,15 +22,19 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.roscopeco.ormdroid.Entity;
+import com.roscopeco.ormdroid.Query;
 
 public class MapView extends ActionBarActivity  {
 //    private Map<String, LatLng> buildingLocations;
     private Map<Marker, Item> markerToItem;
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
+        activity = this;
         
 //        buildingLocations = new HashMap<String, LatLng>();
 //        buildingLocations.put("32", new LatLng(42.361706,-71.090649));
@@ -41,13 +47,19 @@ public class MapView extends ActionBarActivity  {
         
         LatLng mit = new LatLng(42.358953, -71.091634);
         
-        // Get all filters from stream
-        String[] filters = getIntent().getStringArrayExtra(MainStream.FILTERS);
-        
-        // Get all items that correspond with that filter
         List<Item> itemList = new ArrayList<Item>();
-        for(Map<String, Object> datum : MainStream.getItems(filters)) {
-            itemList.add((Item) datum.get("item"));
+        if(getIntent().hasExtra(MainStream.ITEM_ID)) {
+            int id = getIntent().getIntExtra(MainStream.ITEM_ID, 0);
+            itemList.add(Entity.query(Item.class).where(Query.eql("pk", id)).execute());
+        } else {
+            // Get all filters from stream
+            String[] filters = getIntent().getStringArrayExtra(MainStream.FILTERS);
+            
+            // Get all items that correspond with that filter
+
+            for(Map<String, Object> datum : MainStream.getItems(filters)) {
+                itemList.add((Item) datum.get("item"));
+            }
         }
 
         map.setMyLocationEnabled(true);
@@ -57,6 +69,7 @@ public class MapView extends ActionBarActivity  {
             @Override
             public void onInfoWindowClick(Marker marker) {
                 Item item = markerToItem.get(marker);
+                Sting.logButtonPush(activity, Sting.MAP_DETAILS);
                 displayItemDetails(item);
             }
         });
@@ -82,6 +95,12 @@ public class MapView extends ActionBarActivity  {
                 }
             }
         }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sting.logActivityStart(this);
     }
 
     @Override
