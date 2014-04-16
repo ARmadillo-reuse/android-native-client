@@ -2,10 +2,8 @@ package com.example.reusemobile;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -42,12 +40,16 @@ public class GcmIntentService extends IntentService {
                 // Process information
                 Log.i("RECEIVE GCM", "Got GCM message: " + extras.getString("token"));
                 if(extras.containsKey("token")) {
-                    SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    pref.edit().putBoolean("isVerified", true).commit();
-                    pref.edit().putString("token", extras.getString("token")).commit();
+                    Intent loginIntent = new Intent();
+                    loginIntent.setAction(CreateAccount.TOKEN_ACTION);
+                    loginIntent.putExtra(CreateAccount.EXTRA_TOKEN, extras.getString("token"));
+                    sendBroadcast(loginIntent);
+                    Log.i("TAG", "Sent intent");
                 } else if(extras.containsKey("action")) {
                     if(extras.getString("action").equals("pull")) {
-                        MainStream.pullFromServer();
+                        Intent pullIntent = new Intent();
+                        pullIntent.setAction(MainStream.PULL_ACTION);
+                        sendBroadcast(pullIntent);
                     }
                 }
                 

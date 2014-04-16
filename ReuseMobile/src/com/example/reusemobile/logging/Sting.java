@@ -64,23 +64,31 @@ public class Sting {
     public static final String MAP_DETAILS = "MAP_DETAILS";
     
     public static void logButtonPush(Activity activity, String buttonId) {
-        Log.i(BUTTON_PUSH, buttonId);
-        new sendLogData(activity).execute(BUTTON_PUSH, buttonId);
+        if(GlobalApplication.logging) {
+            Log.i(BUTTON_PUSH, buttonId);
+            new sendLogData(activity).execute(BUTTON_PUSH, buttonId);
+        }
     }
     
     public static void logActivityStart(Activity activity) {
-        Log.i(ACTIVITY_START, activity.getClass().toString());
-        new sendLogData(activity).execute(ACTIVITY_START, activity.getClass().toString());
+        if(GlobalApplication.logging) {
+            Log.i(ACTIVITY_START, activity.getClass().toString());
+            new sendLogData(activity).execute(ACTIVITY_START, activity.getClass().toString());
+        }
     }
     
     public static void logNotificationEvent(Activity activity, String eventId) {
-        Log.i(NOTIFICATION_EVENT, eventId);
-        new sendLogData(activity).execute(NOTIFICATION_EVENT, eventId);
+        if(GlobalApplication.logging) {
+            Log.i(NOTIFICATION_EVENT, eventId);
+            new sendLogData(activity).execute(NOTIFICATION_EVENT, eventId);
+        }
     }
     
     public static void logError(Activity activity, String errorId, String reason) {
-        Log.i(ERROR + errorId, reason);
-        new sendLogData(activity).execute(ERROR + errorId, reason);
+        if(GlobalApplication.logging) {
+            Log.i(ERROR + errorId, reason);
+            new sendLogData(activity).execute(ERROR + errorId, reason);
+        }
     }
     
     private static class sendLogData extends AsyncTask<String, Void, String> {

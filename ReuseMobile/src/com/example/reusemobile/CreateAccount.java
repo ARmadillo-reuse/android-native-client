@@ -3,8 +3,6 @@ package com.example.reusemobile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.http.HttpResponse;
@@ -15,11 +13,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
-import com.example.reusemobile.logging.Sting;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -39,35 +36,20 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
 public class CreateAccount extends ActionBarActivity {
     // GCM Stuff
-    public static final String EXTRA_MESSAGE = "message";
+    public static final String TOKEN_ACTION = "com.example.reusemobile.TOKEN_MESSAGE";
+    public static final String EXTRA_TOKEN = "com.example.reusemobile.TOKEN";
     public static final String PROPERTY_REG_ID = "registration_id";
     private static final String PROPERTY_APP_VERSION = "appVersion";
+    private LoginReceiver receiver;
     String SENDER_ID = "1038751243496";
     static final String TAG = "ReuseMobile";
     GoogleCloudMessaging gcm;
     AtomicInteger msgId = new AtomicInteger();
     String regid;
-    
-    private Timer timer = new Timer();
-    private TimerTask verifiedChecker = new TimerTask() {
-        
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("isVerified", false)) {
-                        startActivity(new Intent(getApplicationContext(), MainStream.class));
-                        finish();
-                    }
-                }
-            });
-
-        }
-    };
-
 
 
     @Override
@@ -83,13 +65,17 @@ public class CreateAccount extends ActionBarActivity {
         //  GCM registration.
         gcm = GoogleCloudMessaging.getInstance(this);
         regid = getRegistrationId(getApplicationContext());
-        timer.schedule(verifiedChecker, 0, 30 * 1000);
+
+        receiver = new LoginReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TOKEN_ACTION);
+        registerReceiver(receiver, filter);
     }
     
     @Override
-    protected void onResume() {
-        super.onResume();
-        Sting.logActivityStart(this);
+    protected void onDestroy() {
+        unregisterReceiver(receiver);
+        super.onDestroy();
     }
 
     @Override
@@ -306,8 +292,20 @@ public class CreateAccount extends ActionBarActivity {
                 Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result, Toast.LENGTH_LONG).show();
             }
         }
-        
-        
+
+    }
+    
+    private class LoginReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            pref.edit().putBoolean("isVerified", true).commit();
+            pref.edit().putString("token", intent.getStringExtra("token")).commit();
+            CreateAccount activity = (CreateAccount) context;
+            activity.startActivity(new Intent(context, MainStream.class));
+            activity.finish();
+        }
         
     }
 }
