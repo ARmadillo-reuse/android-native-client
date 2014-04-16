@@ -26,6 +26,7 @@ public class GlobalApplication extends Application {
     
     public static String filterPreferences = "com.example.reuse.filters";
     public static boolean debug = false;
+    public static boolean logging = true;
     public static String serverPort = "8000";
 
     @Override

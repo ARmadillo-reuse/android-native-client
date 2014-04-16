@@ -27,8 +27,10 @@ import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.app.SearchableInfo;
 import android.app.TaskStackBuilder;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.ConnectivityManager;
@@ -80,6 +82,7 @@ public class MainStream extends ActionBarActivity {
     public final static String ITEM_AVAILABLE = "com.example.reusemobile.ITEM_AVAILABLE";
     public final static String NOTIFICATION_FILTER = "com.example.reusemobile.NOTIFICATION_FILTER";
     public final static String FILTERS = "com.example.reusemobile.FILTERS";
+    public final static String PULL_ACTION = "com.example.reusemobile.PULL";
     
     public DrawerLayout mDrawerLayout;
     public ActionBarDrawerToggle mDrawerToggle;
@@ -112,12 +115,13 @@ public class MainStream extends ActionBarActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    pullFromServer();
+                    pullFromServerAndUpdate();
                     refreshItems();
                 }
             });
         }
     };
+    private PullReceiver receiver;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +135,11 @@ public class MainStream extends ActionBarActivity {
             // Set a timer to update itemList
             timer.schedule(refreshTask, 0, refreshInterval);
             timer.schedule(pullFromServerTask, 0, pullInterval);
+            
+            receiver = new PullReceiver();
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(PULL_ACTION);
+            registerReceiver(receiver, filter);
         }
         
         setContentView(R.layout.activity_main_stream);
@@ -200,7 +209,7 @@ public class MainStream extends ActionBarActivity {
                 startActivity(new Intent(this, CreateAccount.class));
                 finish();
             } else {
-                pullFromServer();
+                pullFromServerAndUpdate();
                 refreshItems();
             }
         }
@@ -209,6 +218,12 @@ public class MainStream extends ActionBarActivity {
     @Override
     protected void onPause() {
         super.onPause();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(receiver);
+        super.onDestroy();
     }
     
     @Override
@@ -424,23 +439,23 @@ public class MainStream extends ActionBarActivity {
      * Ensures the app can connect to the network service and issued
      * the Async pull request.
      */
-    public static void pullFromServer() {
+    public void pullFromServerAndUpdate() {
         // Get date of last update
-        long lastUpdate = PreferenceManager.getDefaultSharedPreferences(appContext).getLong("lastUpdate", 0);
+        long lastUpdate = PreferenceManager.getDefaultSharedPreferences(this).getLong("lastUpdate", 0);
 
         
         // Pull from server
         ConnectivityManager connMgr = (ConnectivityManager) 
-                appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+                getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             new PullRequest().execute(lastUpdate); // Updates on completion
         } else {
-            Toast.makeText(appContext, "No network connection available.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No network connection available.", Toast.LENGTH_SHORT).show();
         }
     }
     
-    private static void processItemUpdate(Integer pk, String name, String description,
+    private void processItemUpdate(Integer pk, String name, String description,
             Date date, String location, String tags, Boolean isAvailable, String lat, String lon) {
         // Check if item is already in db
         Item oldItem = Entity.query(Item.class).where(Query.eql("pk", pk)).execute();
@@ -468,13 +483,13 @@ public class MainStream extends ActionBarActivity {
     }
     
     @SuppressLint("NewApi")
-    private static void checkIfShouldNotify(Item item) {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(appContext);
+    private void checkIfShouldNotify(Item item) {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         if(pref.getBoolean("notifications_new_item", true)) {
             
             Set<String> notifyFilters = pref.getStringSet("notifications_filters", new HashSet<String>());
             for(String filter : notifyFilters) {
-                String[] tags = appContext.getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
+                String[] tags = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "").split(" ");
                 for(String tag : tags) {
                     if(item.name.toLowerCase(Locale.ENGLISH).contains(tag) ||
                        item.description.toLowerCase(Locale.ENGLISH).contains(tag) ||
@@ -483,7 +498,7 @@ public class MainStream extends ActionBarActivity {
                         
                         //Sting.logNotificationEvent((Activity) appContext, filter);
                         NotificationCompat.Builder mBuilder =
-                                new NotificationCompat.Builder(appContext)
+                                new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_notification)
                                 .setContentTitle("New '" + filter + "' Item Available!")
                                 .setContentText("Click here to view new item")
@@ -493,7 +508,7 @@ public class MainStream extends ActionBarActivity {
                         mBuilder.setSound(Uri.parse(pref.getString("notifications_new_item_ringtone", "content://settings/system/notification_sound")));
                         
                         // Creates an explicit intent for an Activity in your app
-                        Intent resultIntent = new Intent(appContext, MainStream.class);
+                        Intent resultIntent = new Intent(this, MainStream.class);
                         resultIntent.putExtra(NOTIFICATION_FILTER, filter);
     
                         PendingIntent resultPendingIntent;
@@ -502,7 +517,7 @@ public class MainStream extends ActionBarActivity {
                             // started Activity.
                             // This ensures that navigating backward from the Activity leads out of
                             // your application to the Home screen.
-                            TaskStackBuilder stackBuilder = TaskStackBuilder.create(appContext);
+                            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
                             // Adds the back stack for the Intent (but not the Intent itself)
                             stackBuilder.addParentStack(ItemDetails.class);
                             // Adds the Intent that starts the Activity to the top of the stack
@@ -514,7 +529,7 @@ public class MainStream extends ActionBarActivity {
                                     );
                         } else {
                             resultPendingIntent = PendingIntent.getActivity(
-                                            appContext,
+                                            this,
                                             0,
                                             resultIntent,
                                             PendingIntent.FLAG_UPDATE_CURRENT
@@ -523,7 +538,7 @@ public class MainStream extends ActionBarActivity {
 
                         mBuilder.setContentIntent(resultPendingIntent);
                         NotificationManager mNotificationManager =
-                            (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         // mId allows you to update the notification later on.
                         mNotificationManager.notify(NOTIFICATION_ID + filter.hashCode(), mBuilder.build());
                     }
@@ -556,7 +571,7 @@ public class MainStream extends ActionBarActivity {
      * Makes an HTTP GET request to the server, asking for a list of updated
      * items, since a given time.
      */
-    private static class PullRequest extends AsyncTask<Long, Void, String> {
+    private class PullRequest extends AsyncTask<Long, Void, String> {
         @Override
         protected String doInBackground(Long... params) {
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'+'HH:mm", Locale.ENGLISH);
@@ -609,7 +624,7 @@ public class MainStream extends ActionBarActivity {
                             tags = "";
                         }
                         
-                        MainStream.processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon);
+                        processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon);
                     }
                     // Set current time as new last update
                     PreferenceManager.getDefaultSharedPreferences(appContext).edit().putLong("lastUpdate", new Date().getTime()).commit();
@@ -632,12 +647,19 @@ public class MainStream extends ActionBarActivity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if(result == null) {
+                refreshItems();
             } else {
                 if(GlobalApplication.debug) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
         }
-        
-        
+    }
+    
+    private class PullReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            pullFromServerAndUpdate();
+        }
         
     }
 }
