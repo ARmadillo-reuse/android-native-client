@@ -62,14 +62,18 @@ public class CreateAccount extends ActionBarActivity {
                     .add(R.id.container, new PlaceholderFragment()).commit();
         }
         
-        //  GCM registration.
-        gcm = GoogleCloudMessaging.getInstance(this);
-        regid = getRegistrationId(getApplicationContext());
-
-        receiver = new LoginReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(TOKEN_ACTION);
-        registerReceiver(receiver, filter);
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
+            login();
+        } else {
+            //  GCM registration.
+            gcm = GoogleCloudMessaging.getInstance(this);
+            regid = getRegistrationId(getApplicationContext());
+    
+            receiver = new LoginReceiver();
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(TOKEN_ACTION);
+            registerReceiver(receiver, filter);
+        }
     }
     
     @Override
@@ -299,13 +303,13 @@ public class CreateAccount extends ActionBarActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            pref.edit().putBoolean("isVerified", true).commit();
-            pref.edit().putString("token", intent.getStringExtra("token")).commit();
-            CreateAccount activity = (CreateAccount) context;
-            activity.startActivity(new Intent(context, MainStream.class));
-            activity.finish();
+            login();
         }
         
+    }
+    
+    private void login() {
+        startActivity(new Intent(this, MainStream.class));
+        finish();
     }
 }
