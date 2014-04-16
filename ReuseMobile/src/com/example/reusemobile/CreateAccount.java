@@ -15,9 +15,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
-import com.example.reusemobile.logging.Sting;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -39,6 +36,8 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
 public class CreateAccount extends ActionBarActivity {
     // GCM Stuff
     public static final String EXTRA_MESSAGE = "message";
@@ -50,24 +49,8 @@ public class CreateAccount extends ActionBarActivity {
     AtomicInteger msgId = new AtomicInteger();
     String regid;
     
-    private Timer timer = new Timer();
-    private TimerTask verifiedChecker = new TimerTask() {
-        
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("isVerified", false)) {
-                        startActivity(new Intent(getApplicationContext(), MainStream.class));
-                        finish();
-                    }
-                }
-            });
-
-        }
-    };
-
+    private Timer timer;
+    private TimerTask verifiedChecker;
 
 
     @Override
@@ -83,13 +66,38 @@ public class CreateAccount extends ActionBarActivity {
         //  GCM registration.
         gcm = GoogleCloudMessaging.getInstance(this);
         regid = getRegistrationId(getApplicationContext());
-        timer.schedule(verifiedChecker, 0, 30 * 1000);
+
     }
     
     @Override
     protected void onResume() {
         super.onResume();
-        Sting.logActivityStart(this);
+        timer = new Timer();
+        verifiedChecker = new TimerTask() {
+            
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("isVerified", false)) {
+                            startActivity(new Intent(getApplicationContext(), MainStream.class));
+                            timer.cancel();
+                            finish();
+                        }
+                    }
+                });
+
+            }
+        };
+        timer.schedule(verifiedChecker, 0, 30 * 1000);
+    }
+    
+    @Override
+    protected void onStop() {
+        verifiedChecker.cancel();
+        timer.cancel();
+        super.onStop();
     }
 
     @Override

@@ -51,27 +51,6 @@
         android:text="Claim It!" />
 
     <TextView
-        android:id="@+id/desc_date_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="20dp"
-        android:text="Date Posted: "
-        android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <TextView
-        android:id="@+id/desc_loc_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/desc_date_label"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="18dp"
-        android:text="Location: "
-        android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <TextView
         android:id="@+id/desc_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -87,6 +66,26 @@
         android:layout_alignBottom="@+id/desc_loc_label"
         android:layout_toRightOf="@+id/desc_loc_label"
         android:text="LOCATION"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/desc_loc_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/claim_button"
+        android:layout_alignLeft="@+id/claim_button"
+        android:layout_marginBottom="35dp"
+        android:text="Location: "
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/desc_date_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/desc_loc"
+        android:layout_alignLeft="@+id/desc_loc_label"
+        android:layout_marginBottom="14dp"
+        android:text="Date Posted: "
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </RelativeLayout>

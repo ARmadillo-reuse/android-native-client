@@ -25,8 +25,8 @@ public class GlobalApplication extends Application {
 //    private Boolean[] available = {true, true, true};
     
     public static String filterPreferences = "com.example.reuse.filters";
-    public static boolean debug = true;
-    public static String serverPort = "8001";
+    public static boolean debug = false;
+    public static String serverPort = "8000";
 
     @Override
     public void onCreate() {

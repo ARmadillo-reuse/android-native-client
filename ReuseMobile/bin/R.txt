@@ -355,10 +355,10 @@ int id create_account_button 0x7f070057
 int id create_account_email 0x7f070058
 int id create_account_greeting 0x7f070055
 int id default_activity_button 0x7f07003c
-int id desc_date 0x7f07005f
+int id desc_date 0x7f07005e
 int id desc_date_label 0x7f07005b
-int id desc_loc 0x7f070060
-int id desc_loc_label 0x7f07005e
+int id desc_loc 0x7f07005f
+int id desc_loc_label 0x7f070060
 int id dialog 0x7f070024
 int id disableHome 0x7f07001e
 int id drawer 0x7f070061
