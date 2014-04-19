@@ -22,7 +22,8 @@
             app:layout_gravity="left|top"
             app:layout_row="0"
             android:ems="10"
-            android:hint="Item Name" >
+            android:hint="Item Name"
+            android:inputType="textCapSentences" >
 
             <requestFocus />
             <requestFocus />
@@ -37,7 +38,9 @@
             app:layout_gravity="left|top"
             app:layout_row="1"
             android:ems="10"
-            android:hint="Item Location" >
+            android:hint="Item Location"
+            android:inputType="textCapSentences" >
+
         </EditText>
 
         <EditText
@@ -49,7 +52,7 @@
             app:layout_row="2"
             android:ems="10"
             android:hint="Item Description (Optional)"
-            android:inputType="textMultiLine" />
+            android:inputType="textCapSentences|textMultiLine" />
 
         <EditText
             android:id="@+id/post_tags"
