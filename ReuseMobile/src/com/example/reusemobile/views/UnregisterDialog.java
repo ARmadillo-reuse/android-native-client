@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.reusemobile.GlobalApplication;
@@ -31,9 +32,7 @@ public class UnregisterDialog extends DialogPreference {
             // Unregister User
             new SendUnregisterRequest().execute();
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-            pref.edit().remove("username").commit();
             pref.edit().putBoolean("isVerified", false).commit();
-            pref.edit().remove("token").commit();
             ((Activity) context).finish();
         } else {
             // Do nothing
@@ -57,6 +56,7 @@ public class UnregisterDialog extends DialogPreference {
                 
                 if(response.getStatusLine().getStatusCode() != 200) {
                     Sting.logError((Activity) context, Sting.CLAIM_ERROR, response.getStatusLine().getReasonPhrase());
+                    Log.i("POST", httppost.toString());
                     return "An error occured in unregister:\n" + response.getStatusLine().getReasonPhrase();
                 }
                 
@@ -71,6 +71,10 @@ public class UnregisterDialog extends DialogPreference {
         protected void onPostExecute(String result) {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+            pref.edit().remove("username").commit();
+            pref.edit().remove("token").commit();
+            
             if(result == null) {
             } else {
                 if(GlobalApplication.debug) Toast.makeText(context, result, Toast.LENGTH_SHORT).show();

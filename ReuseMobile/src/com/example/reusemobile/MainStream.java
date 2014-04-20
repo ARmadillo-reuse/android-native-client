@@ -126,6 +126,10 @@ public class MainStream extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        receiver = new PullReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(PULL_ACTION);
+        registerReceiver(receiver, filter);
         
         // Check if user is verified
         if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
@@ -136,10 +140,7 @@ public class MainStream extends ActionBarActivity {
             timer.schedule(refreshTask, 0, refreshInterval);
             timer.schedule(pullFromServerTask, 0, pullInterval);
             
-            receiver = new PullReceiver();
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(PULL_ACTION);
-            registerReceiver(receiver, filter);
+
         }
         
         setContentView(R.layout.activity_main_stream);
