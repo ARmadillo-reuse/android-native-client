@@ -68,7 +68,7 @@ public class GcmIntentService extends IntentService {
     }
     
     private void displayMessage(String message) {
-        if(GlobalApplication.debug) {
+        if(GlobalApplication.isDebug()) {
             Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
         }
     }

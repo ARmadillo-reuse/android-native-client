@@ -579,7 +579,7 @@ public class MainStream extends ActionBarActivity {
             String lastUpdate = formatter.format(new Date(params[0]));
             Log.i("last update", lastUpdate);
             
-            String port = GlobalApplication.serverPort;
+            String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
             HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:" + port + "/api/thread/get/?after=" + lastUpdate);
             String email = PreferenceManager.getDefaultSharedPreferences(appContext).getString("username", "");
@@ -650,7 +650,7 @@ public class MainStream extends ActionBarActivity {
             if(result == null) {
                 refreshItems();
             } else {
-                if(GlobalApplication.debug) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
+                if(GlobalApplication.isDebug()) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
         }
     }

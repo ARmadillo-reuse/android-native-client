@@ -5,6 +5,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.reusemobile.model.Item;
@@ -25,9 +28,8 @@ public class GlobalApplication extends Application {
 //    private Boolean[] available = {true, true, true};
     
     public static String filterPreferences = "com.example.reuse.filters";
-    public static boolean debug = true;
     public static boolean logging = true;
-    public static String serverPort = "8000";
+    private static Context context;
 
     @Override
     public void onCreate() {
@@ -58,7 +60,26 @@ public class GlobalApplication extends Application {
             }
         };
         timer.schedule(task, 0, 15 * 60 * 1000); // Check every 15 minutes
-        
-
+        context = this;
+    }
+    
+    public static String getServerPort() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isUnstable = pref.getBoolean("debug_unstable_server", false);
+        if(isUnstable) {
+            return "8001";
+        } else {
+            return "8000";
+        }
+    }
+    
+    public static boolean isDebug() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        return pref.getBoolean("debug_verbose", false);
+    }
+    
+    public static boolean isDebugLogging() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        return pref.getBoolean("debug_logging_verbose", false);
     }
 }
