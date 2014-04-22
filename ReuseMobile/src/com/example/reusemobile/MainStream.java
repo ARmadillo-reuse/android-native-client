@@ -614,16 +614,8 @@ public class MainStream extends ActionBarActivity {
                         String lat = fields.getString("lat");
                         String lon = fields.getString("lon");
                         
-                        String location;
-                        String tags;
-                        if(!fields.getBoolean("is_email")) {
-                            // Expect location, tags
-                            location = fields.getString("location");
-                            tags = fields.getString("tags");
-                        } else {
-                            location = "";
-                            tags = "";
-                        }
+                        String location = fields.getString("location");
+                        String tags = fields.getString("tags");
                         
                         processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon);
                     }
