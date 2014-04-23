@@ -45,6 +45,8 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils.TruncateAt;
@@ -88,6 +90,7 @@ public class MainStream extends ActionBarActivity {
     public ActionBarDrawerToggle mDrawerToggle;
     public ListView itemList;
     public Drawer drawer;
+    public SwipeRefreshLayout refreshLayout;
     
     private static Context appContext;
     
@@ -196,7 +199,19 @@ public class MainStream extends ActionBarActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
             
-
+            // Setup Swipe to Refresh Listener
+            refreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
+            refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    //refreshLayout.setRefreshing(true);
+                    pullFromServerAndUpdate();
+                }
+            });
+            refreshLayout.setColorScheme(R.color.mit_red,
+                                         R.color.mit_gray,
+                                         R.color.mit_red,
+                                         R.color.mit_gray);
         }
     }
     
@@ -641,6 +656,7 @@ public class MainStream extends ActionBarActivity {
             super.onPostExecute(result);
             if(result == null) {
                 refreshItems();
+                if(refreshLayout.isRefreshing()) refreshLayout.setRefreshing(false);
             } else {
                 if(GlobalApplication.isDebug()) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
