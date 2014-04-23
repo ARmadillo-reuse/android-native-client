@@ -29,8 +29,6 @@ import android.widget.Toast;
  *              -- Sting & The Police
  */
 public class Sting {
-    private static final boolean logDebug = false;
-    
     private static final String BUTTON_PUSH = "BUTTON_PUSH";
     private static final String ACTIVITY_START = "ACTIVITY_START";
     private static final String NOTIFICATION_EVENT = "NOTIFICATION_EVENT";
@@ -101,7 +99,7 @@ public class Sting {
         @Override
         protected String doInBackground(String... params) {
             // Create a new HttpClient and Post Header
-            String port = GlobalApplication.serverPort;
+            String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/log/");
             String email = PreferenceManager.getDefaultSharedPreferences(activity).getString("username", "");
@@ -132,7 +130,7 @@ public class Sting {
         
         @Override
         protected void onPostExecute(String result) {
-            if(GlobalApplication.debug && Sting.logDebug) {
+            if(GlobalApplication.isDebugLogging()) {
                 Toast.makeText(activity, result, Toast.LENGTH_SHORT).show();
             }
         }

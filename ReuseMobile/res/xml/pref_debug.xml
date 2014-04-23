@@ -1,0 +1,36 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="debug_unstable_server"
+        android:title="@string/pref_debug_unstable_server" />
+    
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="debug_verbose"
+        android:title="@string/pref_debug_verbose" />
+        
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="debug_logging_verbose"
+        android:title="@string/pref_debug_logging_verbose" />
+    
+    <com.example.reusemobile.views.DumpDBDialog
+        android:selectAllOnFocus="true"
+        android:dialogTitle="@string/pref_debug_dump_db"
+        android:dialogMessage="@string/pref_debug_dump_db_message"
+        android:positiveButtonText="@string/pref_confirm_yes"
+        android:negativeButtonText="@string/pref_confirm_no"
+        android:title="@string/pref_debug_dump_db">
+    </com.example.reusemobile.views.DumpDBDialog>
+    
+    <com.example.reusemobile.views.ResetLastUpdateDialog
+        android:selectAllOnFocus="true"
+        android:dialogTitle="@string/pref_debug_reset_last_update"
+        android:dialogMessage="@string/pref_debug_reset_last_update_message"
+        android:positiveButtonText="@string/pref_confirm_yes"
+        android:negativeButtonText="@string/pref_confirm_no"
+        android:title="@string/pref_debug_reset_last_update">
+    </com.example.reusemobile.views.ResetLastUpdateDialog>
+
+</PreferenceScreen>

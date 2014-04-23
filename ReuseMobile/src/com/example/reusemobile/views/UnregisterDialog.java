@@ -43,7 +43,7 @@ public class UnregisterDialog extends DialogPreference {
         @Override
         protected String doInBackground(Void... params) {
          // Create a new HttpClient and Post Header
-            String port = GlobalApplication.serverPort;
+            String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/login/unregister/");
             String email = PreferenceManager.getDefaultSharedPreferences(context).getString("username", "");
@@ -77,7 +77,7 @@ public class UnregisterDialog extends DialogPreference {
             
             if(result == null) {
             } else {
-                if(GlobalApplication.debug) Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
+                if(GlobalApplication.isDebug()) Toast.makeText(context, result, Toast.LENGTH_SHORT).show();
             }
         }
     }

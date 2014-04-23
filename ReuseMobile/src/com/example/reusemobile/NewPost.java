@@ -101,7 +101,7 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         @Override
         protected String doInBackground(String... params) {
          // Create a new HttpClient and Post Header
-            String port = GlobalApplication.serverPort;
+            String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/post/");
             String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");

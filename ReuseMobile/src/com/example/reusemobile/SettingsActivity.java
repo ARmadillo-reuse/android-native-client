@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -20,7 +21,9 @@ import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.support.v4.app.NavUtils;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.reusemobile.logging.Sting;
 import com.example.reusemobile.views.FilterNotificationPicker;
@@ -44,6 +47,8 @@ public class SettingsActivity extends PreferenceActivity {
      * shown on tablets.
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
+    private static int secretButtonPressCount = 0;
+    private static boolean isDebug = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +64,7 @@ public class SettingsActivity extends PreferenceActivity {
         if(!PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
             finish(); // Go to parent activity
         }
+        secretButtonPressCount = 0;
     }
     
 
@@ -90,6 +96,21 @@ public class SettingsActivity extends PreferenceActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ( keyCode == KeyEvent.KEYCODE_MENU ) {
+            secretButtonPressCount++;
+            if(secretButtonPressCount == 10 && !isDebug) {
+                isDebug = true;
+                Toast.makeText(this, "You are now in debug mode", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, SettingsActivity.class));
+                finish();
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -127,6 +148,14 @@ public class SettingsActivity extends PreferenceActivity {
         bindPreferenceSummaryToValue(findPreference("username"));
         bindPreferenceSummaryToValue(findPreference("notifications_filters"));
         bindPreferenceSummaryToValue(findPreference("notifications_new_item_ringtone"));
+        
+        if(isDebug) {
+            // Add 'debugging' preferences, and a corresponding header.
+            fakeHeader = new PreferenceCategory(this);
+            fakeHeader.setTitle(R.string.pref_header_debugging);
+            getPreferenceScreen().addPreference(fakeHeader);
+            addPreferencesFromResource(R.xml.pref_debug);
+        }
     }
 
     /** {@inheritDoc} */
@@ -234,18 +263,18 @@ public class SettingsActivity extends PreferenceActivity {
 
         // Trigger the listener immediately with the preference's
         // current value.
-        if(preference.getClass() != FilterNotificationPicker.class) {
-            sBindPreferenceSummaryToValueListener.onPreferenceChange(
-                    preference,
-                    PreferenceManager.getDefaultSharedPreferences(
-                            preference.getContext()).getString(preference.getKey(),
-                            ""));
-        } else {
+        if(preference.getClass() == FilterNotificationPicker.class) {
             sBindPreferenceSummaryToValueListener.onPreferenceChange(
                     preference,
                     PreferenceManager.getDefaultSharedPreferences(
                             preference.getContext()).getStringSet(preference.getKey(),
                             new HashSet<String>()));
+        } else {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(
+                    preference,
+                    PreferenceManager.getDefaultSharedPreferences(
+                            preference.getContext()).getString(preference.getKey(),
+                            ""));
         }
     }
 
@@ -286,6 +315,20 @@ public class SettingsActivity extends PreferenceActivity {
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("notifications_filters"));
             bindPreferenceSummaryToValue(findPreference("notifications_new_item_ringtone"));
+        }
+    }
+    
+    /**
+     * This fragment shows debugging preferences only. It is used when the
+     * activity is showing a two-pane settings UI.
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class DebuggingPreferenceFragment extends
+            PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_debug);
         }
     }
 }

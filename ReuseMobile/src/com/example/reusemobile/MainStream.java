@@ -45,6 +45,8 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils.TruncateAt;
@@ -88,6 +90,7 @@ public class MainStream extends ActionBarActivity {
     public ActionBarDrawerToggle mDrawerToggle;
     public ListView itemList;
     public Drawer drawer;
+    public SwipeRefreshLayout refreshLayout;
     
     private static Context appContext;
     
@@ -196,7 +199,19 @@ public class MainStream extends ActionBarActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
             
-
+            // Setup Swipe to Refresh Listener
+            refreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
+            refreshLayout.setOnRefreshListener(new OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    //refreshLayout.setRefreshing(true);
+                    pullFromServerAndUpdate();
+                }
+            });
+            refreshLayout.setColorScheme(R.color.mit_red,
+                                         R.color.mit_gray,
+                                         R.color.mit_red,
+                                         R.color.mit_gray);
         }
     }
     
@@ -579,7 +594,7 @@ public class MainStream extends ActionBarActivity {
             String lastUpdate = formatter.format(new Date(params[0]));
             Log.i("last update", lastUpdate);
             
-            String port = GlobalApplication.serverPort;
+            String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
             HttpGet httpget = new HttpGet("http://armadillo.xvm.mit.edu:" + port + "/api/thread/get/?after=" + lastUpdate);
             String email = PreferenceManager.getDefaultSharedPreferences(appContext).getString("username", "");
@@ -614,16 +629,8 @@ public class MainStream extends ActionBarActivity {
                         String lat = fields.getString("lat");
                         String lon = fields.getString("lon");
                         
-                        String location;
-                        String tags;
-                        if(!fields.getBoolean("is_email")) {
-                            // Expect location, tags
-                            location = fields.getString("location");
-                            tags = fields.getString("tags");
-                        } else {
-                            location = "";
-                            tags = "";
-                        }
+                        String location = fields.getString("location");
+                        String tags = fields.getString("tags");
                         
                         processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon);
                     }
@@ -649,8 +656,9 @@ public class MainStream extends ActionBarActivity {
             super.onPostExecute(result);
             if(result == null) {
                 refreshItems();
+                if(refreshLayout.isRefreshing()) refreshLayout.setRefreshing(false);
             } else {
-                if(GlobalApplication.debug) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
+                if(GlobalApplication.isDebug()) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
         }
     }

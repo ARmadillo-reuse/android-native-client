@@ -195,7 +195,7 @@ public class CreateAccount extends ActionBarActivity {
             }
             regid = gcm.register(SENDER_ID);
             final String msg = "Device registered, registration ID=" + regid;
-            if(GlobalApplication.debug) {
+            if(GlobalApplication.isDebug()) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -209,7 +209,7 @@ public class CreateAccount extends ActionBarActivity {
             wasSuccessful = true;
         } catch (IOException ex) {
             final String msg = "Error :" + ex.getMessage();
-            if(GlobalApplication.debug) {
+            if(GlobalApplication.isDebug()) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -249,7 +249,7 @@ public class CreateAccount extends ActionBarActivity {
         @Override
         protected String doInBackground(String... params) {
          // Create a new HttpClient and Post Header
-            String port = GlobalApplication.serverPort;
+            String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/login/signup/");
             email = params[0];
