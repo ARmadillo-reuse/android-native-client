@@ -22,6 +22,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -76,6 +77,7 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         itemAvailable = intent.getBooleanExtra(MainStream.ITEM_AVAILABLE, false);
         nameField.setText(itemName);
         descField.setText(itemDescription);
+        Linkify.addLinks(descField, Linkify.ALL);
         dateField.setText(DateFormat.format("MM/dd/yyyy hh:mm:ssa", itemDate));
         locField.setText(itemLocation);
         if(!itemAvailable) {
@@ -89,7 +91,6 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         super.onResume();
         Sting.logActivityStart(this);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -123,6 +124,17 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         Sting.logButtonPush(this, Sting.CLAIM_BUTTON);
         ConfirmClaim confirmClaim = ConfirmClaim.newInstance(itemName);
         confirmClaim.show(getSupportFragmentManager(), "ConfirmClaim");
+    }
+    
+    public void customMessage(View view) {
+        
+    }
+    
+    public void map(View view) {
+        Intent intent = new Intent(this, MapView.class);
+        intent.putExtra(MainStream.ITEM_ID, itemId);
+        Sting.logButtonPush(this, Sting.ACTION_MAP);
+        startActivity(intent);
     }
 
     /**

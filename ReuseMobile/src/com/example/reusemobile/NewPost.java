@@ -49,7 +49,7 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         super.onResume();
         Sting.logActivityStart(this);
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 

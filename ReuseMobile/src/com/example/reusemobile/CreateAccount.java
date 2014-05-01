@@ -81,6 +81,7 @@ public class CreateAccount extends ActionBarActivity {
         unregisterReceiver(receiver);
         super.onDestroy();
     }
+    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

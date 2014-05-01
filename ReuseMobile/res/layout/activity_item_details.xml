@@ -9,13 +9,15 @@
 
     <TextView
         android:id="@+id/item_name"
-        android:maxLines="2"
-        android:ellipsize="end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:layout_marginTop="20dp"
+        android:ellipsize="end"
+        android:maxLines="2"
         android:text="Item Name"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
@@ -37,18 +39,6 @@
             android:text="Item Description"
             android:textAppearance="?android:attr/textAppearanceMedium" />
     </ScrollView>
-
-    <Button
-        android:id="@+id/claim_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="50dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:onClick="claim"
-        android:text="Claim It!" />
 
     <TextView
         android:id="@+id/desc_date"
@@ -75,7 +65,7 @@
         android:layout_above="@+id/claim_button"
         android:layout_alignLeft="@+id/claim_button"
         android:layout_marginBottom="35dp"
-        android:text="Location: "
+        android:text="@string/details_loc_label"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
@@ -85,7 +75,40 @@
         android:layout_above="@+id/desc_loc"
         android:layout_alignLeft="@+id/desc_loc_label"
         android:layout_marginBottom="14dp"
-        android:text="Date Posted: "
+        android:text="@string/details_date_label"
         android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <Button
+        android:id="@+id/claim_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/custom_response"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:onClick="claim"
+        android:text="@string/details_claim_button" />
+
+    <Button
+        android:id="@+id/custom_response"
+        style="?android:attr/buttonStyleSmall"
+        android:onClick="customMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/claim_button"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:layout_toLeftOf="@+id/view_on_map"
+        android:text="@string/details_custom_message_button" />
+
+    <Button
+        android:id="@+id/view_on_map"
+        android:onClick="map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/custom_response"
+        android:layout_alignRight="@+id/claim_button"
+        android:layout_alignTop="@+id/custom_response"
+        android:text="@string/details_map_button" />
 
 </RelativeLayout>

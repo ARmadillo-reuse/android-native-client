@@ -22,6 +22,7 @@ import android.preference.RingtonePreference;
 import android.support.v4.app.NavUtils;
 import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -112,6 +113,7 @@ public class SettingsActivity extends PreferenceActivity {
         }
         return super.onKeyDown(keyCode, event);
     }
+
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {

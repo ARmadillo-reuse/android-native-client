@@ -50,6 +50,7 @@ import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils.TruncateAt;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -403,7 +404,11 @@ public class MainStream extends ActionBarActivity {
             for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
-                datum.put("description", item.description);
+                //datum.put("description", item.description);
+                StringBuilder details = new StringBuilder();
+                if (!item.location.equals("")) details.append("Location: " + item.location + "\n");
+                details.append(DateFormat.format("hh:mm:ssa EEEE MMM d, yyyy", item.date));
+                datum.put("description", details.toString());
                 datum.put("item", item);
                 data.add(datum);
             }
@@ -422,7 +427,11 @@ public class MainStream extends ActionBarActivity {
             for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).where(whereQuery.toString()).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", item.name);
-                datum.put("description", item.description);
+                //datum.put("description", item.description);
+                StringBuilder details = new StringBuilder();
+                if (!item.location.equals("")) details.append("Location: " + item.location + "\n");
+                details.append(DateFormat.format("hh:mm:ssa EEEE MMM d, yyyy", item.date));
+                datum.put("description", details.toString());
                 datum.put("item", item);
                 data.add(datum);
             }

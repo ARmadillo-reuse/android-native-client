@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="details_date_label">Date Posted: </string>
+    <string name="details_loc_label">Location: </string>
+    <string name="details_claim_button">Claim It!</string>
+    <string name="details_map_button">View on Map</string>
+    <string name="details_custom_message_button">Send Custom Response</string>
+
+</resources>
