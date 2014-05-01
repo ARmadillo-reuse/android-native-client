@@ -60,6 +60,9 @@ public class Sting {
     public static final String POST_BUTTON = "POST";
     public static final String MAP_MARKER = "MAP_MARKER";
     public static final String MAP_DETAILS = "MAP_DETAILS";
+    public static final String VIEW_MAP = "VIEW_ON_MAP";
+    public static final String CUSTOM_RESPONSE = "CUSTOM_RESPONSE";
+    public static final String SEND_CUSTOM_RESPONSE = "SEND_CUSTOM_RESPONSE";
     
     public static void logButtonPush(Activity activity, String buttonId) {
         if(GlobalApplication.logging) {

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +33,14 @@ public class AddFilter extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         Sting.logActivityStart(this);
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ( keyCode == KeyEvent.KEYCODE_MENU ) {
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override

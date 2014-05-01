@@ -82,7 +82,7 @@
         android:id="@+id/claim_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/custom_response"
+        android:layout_above="@+id/custom_response_button"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
@@ -90,25 +90,25 @@
         android:text="@string/details_claim_button" />
 
     <Button
-        android:id="@+id/custom_response"
+        android:id="@+id/custom_response_button"
         style="?android:attr/buttonStyleSmall"
-        android:onClick="customMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/claim_button"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="20dp"
-        android:layout_toLeftOf="@+id/view_on_map"
+        android:layout_toLeftOf="@+id/view_on_map_button"
+        android:onClick="customMessage"
         android:text="@string/details_custom_message_button" />
 
     <Button
-        android:id="@+id/view_on_map"
-        android:onClick="map"
+        android:id="@+id/view_on_map_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/custom_response"
+        android:layout_alignBottom="@+id/custom_response_button"
         android:layout_alignRight="@+id/claim_button"
-        android:layout_alignTop="@+id/custom_response"
+        android:layout_alignTop="@+id/custom_response_button"
+        android:onClick="map"
         android:text="@string/details_map_button" />
 
 </RelativeLayout>

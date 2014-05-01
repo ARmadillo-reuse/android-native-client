@@ -68,7 +68,6 @@ public class SettingsActivity extends PreferenceActivity {
         secretButtonPressCount = 0;
     }
     
-
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */

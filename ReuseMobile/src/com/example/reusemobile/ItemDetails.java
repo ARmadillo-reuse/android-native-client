@@ -24,6 +24,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
 import android.text.util.Linkify;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +42,8 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
     private TextView dateField;
     private TextView locField;
     private Button claimButton;
+    private Button mapButton;
+    private Button customResponseButton;
     
     private int itemId;
     private String itemName;
@@ -67,6 +70,8 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         dateField = (TextView) findViewById(R.id.desc_date);
         locField = (TextView) findViewById(R.id.desc_loc);
         claimButton = (Button) findViewById(R.id.claim_button);
+        mapButton = (Button) findViewById(R.id.view_on_map_button);
+        customResponseButton = (Button) findViewById(R.id.custom_response_button);
         
         Intent intent = getIntent();
         itemId = intent.getIntExtra(MainStream.ITEM_ID, -1);
@@ -84,12 +89,23 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
             claimButton.setEnabled(false);
             claimButton.setText("Claimed");
         }
+        if(itemLocation.equals("")) {
+            mapButton.setEnabled(false);
+        }
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         Sting.logActivityStart(this);
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ( keyCode == KeyEvent.KEYCODE_MENU ) {
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override
@@ -127,13 +143,16 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
     }
     
     public void customMessage(View view) {
-        
+        Sting.logButtonPush(this, Sting.CUSTOM_RESPONSE);
+        Intent intent = new Intent(this, CustomMessage.class);
+        intent.putExtra(MainStream.ITEM_ID, itemId);
+        startActivity(intent);
     }
     
     public void map(View view) {
+        Sting.logButtonPush(this, Sting.VIEW_MAP);
         Intent intent = new Intent(this, MapView.class);
         intent.putExtra(MainStream.ITEM_ID, itemId);
-        Sting.logButtonPush(this, Sting.ACTION_MAP);
         startActivity(intent);
     }
 
