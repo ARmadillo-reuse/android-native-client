@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -600,6 +601,7 @@ public class MainStream extends ActionBarActivity {
         @Override
         protected String doInBackground(Long... params) {
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'+'HH:mm", Locale.ENGLISH);
+            formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
             String lastUpdate = formatter.format(new Date(params[0]));
             Log.i("last update", lastUpdate);
             
@@ -631,6 +633,7 @@ public class MainStream extends ActionBarActivity {
                         
                         // Get date
                         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH);
+                        df.setTimeZone(TimeZone.getTimeZone("GMT"));
                         Date date = df.parse(fields.getString("modified"));
                         
                         // Get if available, lat, and long
