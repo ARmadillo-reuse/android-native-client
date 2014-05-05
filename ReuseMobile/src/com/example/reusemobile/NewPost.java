@@ -21,6 +21,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -49,7 +50,15 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         super.onResume();
         Sting.logActivityStart(this);
     }
-
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ( keyCode == KeyEvent.KEYCODE_MENU ) {
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 

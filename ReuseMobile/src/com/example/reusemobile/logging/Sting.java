@@ -55,11 +55,18 @@ public class Sting {
     public static final String ADD_FILTER_BUTTON = "ADD_FILTER";
     public static final String TOUCH_FILTER_BUTTON = "TOUCH_FILTER";
     public static final String DELETE_FILTER_BUTTON = "DELETE_FILTER";
+    public static final String EDIT_FILTER_BUTTON = "EDIT_FILTER";
     public static final String CREATE_FILTER_BUTTON = "CREATE_FILTER";
+    public static final String SAVE_FILTER = "SAVE_FILTER_CHANGES";
     public static final String CLAIM_BUTTON = "CLAIM";
     public static final String POST_BUTTON = "POST";
     public static final String MAP_MARKER = "MAP_MARKER";
     public static final String MAP_DETAILS = "MAP_DETAILS";
+    public static final String VIEW_MAP = "VIEW_ON_MAP";
+    public static final String CUSTOM_RESPONSE = "CUSTOM_RESPONSE";
+    public static final String SEND_CUSTOM_RESPONSE = "SEND_CUSTOM_RESPONSE";
+    public static final String EMAIL = "EMAIL";
+    public static final String SEND_EMAIL = "SEND_EMAIL";
     
     public static void logButtonPush(Activity activity, String buttonId) {
         if(GlobalApplication.logging) {

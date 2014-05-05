@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Menu;
 
 import com.example.reusemobile.model.Item;
 import com.roscopeco.ormdroid.Entity;
