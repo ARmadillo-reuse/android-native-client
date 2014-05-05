@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="email_title">Compose your email here:</string>
+    <string name="email_hint">Example: "I'm only claiming&#8230;"</string>
+    <string name="email_send_button">Send!</string>
+
+</resources>

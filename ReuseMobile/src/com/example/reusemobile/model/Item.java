@@ -15,12 +15,13 @@ public class Item extends Entity {
     public Boolean isAvailable;
     public String lat;
     public String lon;
+    public String sender;
     
     public Item() {
-      this(null, null, null, null, null, null, null, null, null);
+      this(null, null, null, null, null, null, null, null, null, null);
     }
     
-    public Item(Integer pk, String name, String description, Date date, String location, String tags, Boolean isAvailable, String lat, String lon) {
+    public Item(Integer pk, String name, String description, Date date, String location, String tags, Boolean isAvailable, String lat, String lon, String sender) {
       this.pk = pk;
       this.name = name;
       this.description = description;
@@ -30,9 +31,10 @@ public class Item extends Entity {
       this.isAvailable = isAvailable;
       this.lat = lat;
       this.lon = lon;
+      this.sender = sender;
       
       if(isAvailable != null && name != null && !isAvailable) {
-          this.name = "[CLAIMED] " + this.name;
+          this.name = "<font color='#858789'>Claimed: " + this.name + "</font>";
       }
     }
     
@@ -41,7 +43,7 @@ public class Item extends Entity {
     }
     
     public void markAsClaimed() {
-        name = "[CLAIMED] " + name;
+        name = "<font color='#858789'>Claimed: " + this.name + "</font>";
         isAvailable = false;
     }
 }

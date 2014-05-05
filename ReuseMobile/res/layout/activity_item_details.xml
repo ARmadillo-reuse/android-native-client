@@ -7,20 +7,6 @@
     tools:context="com.example.reusemobile.ItemDetails"
     tools:ignore="MergeRootFrame" >
 
-    <TextView
-        android:id="@+id/item_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="20dp"
-        android:ellipsize="end"
-        android:maxLines="2"
-        android:text="Item Name"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
     <ScrollView
         android:id="@+id/item_desc_container"
         android:layout_width="wrap_content"
@@ -28,9 +14,10 @@
         android:layout_above="@+id/desc_date_label"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/item_name"
+        android:layout_below="@+id/bar"
         android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp" >
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="10dp" >
 
         <TextView
             android:id="@+id/item_desc"
@@ -58,15 +45,16 @@
         android:text="LOCATION"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    <TextView
-        android:id="@+id/desc_loc_label"
+    <Button
+        android:id="@+id/email_sender_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/claim_button"
         android:layout_alignLeft="@+id/claim_button"
-        android:layout_marginBottom="35dp"
-        android:text="@string/details_loc_label"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/claim_button"
+        android:layout_marginBottom="20dp"
+        android:onClick="emailSender"
+        android:text="@string/details_email_sender" />
 
     <TextView
         android:id="@+id/desc_date_label"
@@ -74,30 +62,44 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/desc_loc"
         android:layout_alignLeft="@+id/desc_loc_label"
-        android:layout_marginBottom="14dp"
+        android:layout_marginTop="10dp"
         android:text="@string/details_date_label"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/desc_sender_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/desc_loc_label"
+        android:layout_below="@+id/desc_loc"
+        android:text="@string/details_sender_label"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/desc_sender"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/desc_sender_label"
+        android:layout_alignBottom="@+id/desc_sender_label"
+        android:layout_toRightOf="@+id/desc_sender_label"
+        android:text="SENDER"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <Button
         android:id="@+id/claim_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/custom_response_button"
-        android:layout_centerHorizontal="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
+        android:layout_above="@+id/email_sender_button"
+        android:layout_toLeftOf="@+id/claim_some_button"
         android:onClick="claim"
         android:text="@string/details_claim_button" />
 
     <Button
-        android:id="@+id/custom_response_button"
-        style="?android:attr/buttonStyleSmall"
+        android:id="@+id/claim_some_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/claim_button"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
-        android:layout_toLeftOf="@+id/view_on_map_button"
+        android:layout_above="@+id/email_sender_button"
+        android:layout_alignParentRight="true"
         android:onClick="customMessage"
         android:text="@string/details_custom_message_button" />
 
@@ -105,10 +107,54 @@
         android:id="@+id/view_on_map_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/custom_response_button"
-        android:layout_alignRight="@+id/claim_button"
-        android:layout_alignTop="@+id/custom_response_button"
+        android:layout_alignBaseline="@+id/email_sender_button"
+        android:layout_alignBottom="@+id/email_sender_button"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/claim_button"
         android:onClick="map"
         android:text="@string/details_map_button" />
+
+    <TextView
+        android:id="@+id/desc_loc_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/claim_button"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="34dp"
+        android:layout_marginLeft="20dp"
+        android:text="@string/details_loc_label"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/item_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="Item Name"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
+    <View
+        android:id="@+id/bar"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/item_name"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@color/mit_gray" />
+    
+        <View
+        android:id="@+id/bar2"
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/item_desc_container"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@color/mit_gray" />
 
 </RelativeLayout>

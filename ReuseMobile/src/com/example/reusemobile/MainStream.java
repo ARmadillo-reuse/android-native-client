@@ -50,6 +50,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
+import android.text.Html;
 import android.text.TextUtils.TruncateAt;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -331,11 +332,6 @@ public class MainStream extends ActionBarActivity {
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
         intent.putExtra(ITEM_ID, item.pk);
-        intent.putExtra(ITEM_NAME, item.name);
-        intent.putExtra(ITEM_DESCRIPTION, item.description);
-        intent.putExtra(ITEM_DATE, item.date.getTime());
-        intent.putExtra(ITEM_LOCATION, item.location);
-        intent.putExtra(ITEM_AVAILABLE, item.isAvailable);
         startActivity(intent);
     }
     
@@ -381,10 +377,9 @@ public class MainStream extends ActionBarActivity {
                                                                 public void setViewText(
                                                                         TextView v,
                                                                         String text) {
-                                                                    // TODO Auto-generated method stub
                                                                     v.setMaxLines(2);
                                                                     v.setEllipsize(TruncateAt.END);
-                                                                    super.setViewText(v, text);
+                                                                    v.setText(Html.fromHtml(text));
                                                                 }
             
             
@@ -404,11 +399,11 @@ public class MainStream extends ActionBarActivity {
         if (keywords.length == 0) {
             for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
-                datum.put("name", item.name);
+                datum.put("name", "<b>" + item.name + "</b>");
                 //datum.put("description", item.description);
                 StringBuilder details = new StringBuilder();
-                if (!item.location.equals("")) details.append("Location: " + item.location + "\n");
-                details.append(DateFormat.format("hh:mm:ssa EEEE MMM d, yyyy", item.date));
+                if (!item.location.equals("")) details.append("Location: " + item.location + "<br>");
+                details.append(DateFormat.format("EEEE h:mm a MMM d, yyyy", item.date));
                 datum.put("description", details.toString());
                 datum.put("item", item);
                 data.add(datum);
@@ -427,11 +422,11 @@ public class MainStream extends ActionBarActivity {
             whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
             for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).where(whereQuery.toString()).orderBy("date").toSql() + " DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
-                datum.put("name", item.name);
+                datum.put("name", "<b>" + item.name + "</b>");
                 //datum.put("description", item.description);
                 StringBuilder details = new StringBuilder();
-                if (!item.location.equals("")) details.append("Location: " + item.location + "\n");
-                details.append(DateFormat.format("hh:mm:ssa EEEE MMM d, yyyy", item.date));
+                if (!item.location.equals("")) details.append("Location: " + item.location + "<br>");
+                details.append(DateFormat.format("EEEE h:mm a MMM d, yyyy", item.date));
                 datum.put("description", details.toString());
                 datum.put("item", item);
                 data.add(datum);
@@ -482,7 +477,7 @@ public class MainStream extends ActionBarActivity {
     }
     
     private void processItemUpdate(Integer pk, String name, String description,
-            Date date, String location, String tags, Boolean isAvailable, String lat, String lon) {
+            Date date, String location, String tags, Boolean isAvailable, String lat, String lon, String sender) {
         // Check if item is already in db
         Item oldItem = Entity.query(Item.class).where(Query.eql("pk", pk)).execute();
         if(oldItem != null) {
@@ -499,10 +494,11 @@ public class MainStream extends ActionBarActivity {
             oldItem.tags = tags;
             oldItem.lat = lat;
             oldItem.lon = lon;
+            oldItem.sender = sender;
             oldItem.save();
         } else {
             // Add new item
-            Item item = new Item(pk, name, description, date, location, tags, isAvailable, lat, lon);
+            Item item = new Item(pk, name, description, date, location, tags, isAvailable, lat, lon, sender);
             item.save();
             checkIfShouldNotify(item);
         }
@@ -643,8 +639,9 @@ public class MainStream extends ActionBarActivity {
                         
                         String location = fields.getString("location");
                         String tags = fields.getString("tags");
+                        String sender = fields.getString("sender"); //TODO Update with real field name
                         
-                        processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon);
+                        processItemUpdate(id, name, desc, date, location, tags, isAvailable, lat, lon, sender);
                     }
                     // Set current time as new last update
                     PreferenceManager.getDefaultSharedPreferences(appContext).edit().putLong("lastUpdate", new Date().getTime()).commit();

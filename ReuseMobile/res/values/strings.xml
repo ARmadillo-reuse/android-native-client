@@ -27,5 +27,6 @@
     <string name="title_activity_create_account">Sign up</string>
     <string name="title_activity_map_view">Map</string>
     <string name="title_activity_custom_message">Custom Message</string>
+    <string name="title_activity_email_sender">Email Sender</string>
 
 </resources>

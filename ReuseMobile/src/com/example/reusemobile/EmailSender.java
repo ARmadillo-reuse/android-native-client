@@ -18,12 +18,8 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
-import android.text.Html;
-import android.text.format.DateFormat;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -31,67 +27,31 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.reusemobile.logging.Sting;
-import com.example.reusemobile.model.Item;
-import com.roscopeco.ormdroid.Entity;
-import com.roscopeco.ormdroid.Query;
 
-public class ItemDetails extends ActionBarActivity implements ConfirmClaim.ConfirmClaimListener {
-    private TextView nameField;
-    private TextView descField;
-    private TextView dateField;
-    private TextView locField;
-    private TextView senderField;
-    private Button claimButton;
-    private Button claimSomeButton;
-    private Button mapButton;
-    
+public class EmailSender extends ActionBarActivity {
     private int itemId;
-    private Item item;
-    
+    private EditText emailMessage;
     private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_item_details);
         activity = this;
+        setContentView(R.layout.activity_email_sender);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment()).commit();
         }
         
-        nameField = (TextView) findViewById(R.id.item_name);
-        descField = (TextView) findViewById(R.id.item_desc);
-        dateField = (TextView) findViewById(R.id.desc_date);
-        locField = (TextView) findViewById(R.id.desc_loc);
-        senderField = (TextView) findViewById(R.id.desc_sender);
-        claimButton = (Button) findViewById(R.id.claim_button);
-        claimSomeButton = (Button) findViewById(R.id.claim_some_button);
-        mapButton = (Button) findViewById(R.id.view_on_map_button);
-        
         Intent intent = getIntent();
         itemId = intent.getIntExtra(MainStream.ITEM_ID, -1);
-        item = Entity.query(Item.class).where(Query.eql("pk", itemId)).execute();
-        nameField.setText(Html.fromHtml("<b>" + item.name + "</b>"));
-        descField.setText(Html.fromHtml(item.description.replaceAll("\\n", "<br>")));
-        Linkify.addLinks(descField, Linkify.ALL);
-        dateField.setText(DateFormat.format("EEEE h:mm a MMM d, yyyy", item.date));
-        locField.setText(item.location);
-        senderField.setText(item.sender);
-        Linkify.addLinks(senderField, Linkify.EMAIL_ADDRESSES);
-        if(!item.isAvailable) {
-            claimButton.setEnabled(false);
-            claimSomeButton.setEnabled(false);
-        }
-        if(item.location.equals("") || !item.isAvailable) {
-            mapButton.setEnabled(false);
-        }
+        emailMessage = (EditText) findViewById(R.id.email_message);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
     
     @Override
@@ -112,7 +72,7 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
     public boolean onCreateOptionsMenu(Menu menu) {
 
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.item_details, menu);
+        getMenuInflater().inflate(R.menu.email_sender, menu);
         return true;
     }
 
@@ -121,46 +81,21 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        switch (item.getItemId()) {
+        // Respond to the action bar's Up/Home button
+        case android.R.id.home:
+            finish();
             return true;
-        }
-        if (id == R.id.action_map_view) {
-            Intent intent = new Intent(this, MapView.class);
-            intent.putExtra(MainStream.ITEM_ID, itemId);
-            Sting.logButtonPush(this, Sting.ACTION_MAP);
-            startActivity(intent);
+        case  R.id.action_settings:
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
     
-    public void claim(View view) {
-        // Process claim action
-        Sting.logButtonPush(this, Sting.CLAIM_BUTTON);
-        ConfirmClaim confirmClaim = ConfirmClaim.newInstance(item.name);
-        confirmClaim.show(getSupportFragmentManager(), "ConfirmClaim");
-    }
-    
-    public void customMessage(View view) {
-        Sting.logButtonPush(this, Sting.CUSTOM_RESPONSE);
-        Intent intent = new Intent(this, CustomMessage.class);
-        intent.putExtra(MainStream.ITEM_ID, itemId);
-        startActivity(intent);
-    }
-    
-    public void emailSender(View view) {
-        Sting.logButtonPush(this, Sting.EMAIL);
-        Intent intent = new Intent(this, EmailSender.class);
-        intent.putExtra(MainStream.ITEM_ID, itemId);
-        startActivity(intent);
-    }
-    
-    public void map(View view) {
-        Sting.logButtonPush(this, Sting.VIEW_MAP);
-        Intent intent = new Intent(this, MapView.class);
-        intent.putExtra(MainStream.ITEM_ID, itemId);
-        startActivity(intent);
+    public void send(View view) {
+        Sting.logButtonPush(this, Sting.SEND_EMAIL);
+        String message = emailMessage.getText().toString();
+        (new SendEmail()).execute(String.valueOf(itemId), message);
     }
 
     /**
@@ -174,32 +109,30 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_item_details,
+            View rootView = inflater.inflate(R.layout.fragment_email_sender,
                     container, false);
-            
             return rootView;
         }
     }
-
     
-    private class SendClaim extends AsyncTask<Integer, Void, String> {
+    private class SendEmail extends AsyncTask<String, Void, String> {
         @Override
-        protected String doInBackground(Integer... params) {
+        protected String doInBackground(String... params) {
          // Create a new HttpClient and Post Header
             String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/claim/");
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/claim/"); //TODO get real address
             String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
             httppost.addHeader("USERNAME", email);
             String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
             httppost.addHeader("TOKEN", token);
-            Integer id = params[0];
+            String id = params[0];
+            String message = params[1];
             try {
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
                 nameValuePairs.add(new BasicNameValuePair("item_id", id.toString()));
-                nameValuePairs.add(new BasicNameValuePair("text", ""));
-                nameValuePairs.add(new BasicNameValuePair("email", "false"));
-                //nameValuePairs.add(new BasicNameValuePair("gcm_id", "1038751243496"));
+                nameValuePairs.add(new BasicNameValuePair("text", message));
+                nameValuePairs.add(new BasicNameValuePair("email", "true"));
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
                 // Execute HTTP Post Request
@@ -225,28 +158,14 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
 
         @Override
         protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
             super.onPostExecute(result);
             if(result == null) {
-                claimButton.setText("Claimed");
-                Toast.makeText(getApplicationContext(), "Item Claimed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Message Sent!", Toast.LENGTH_SHORT).show();
+                finish();
             } else {
-                claimButton.setEnabled(true);
                 Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-
-    @Override
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        claimButton.setEnabled(false);
-        new SendClaim().execute(itemId);
-    }
-
-
-    @Override
-    public void onDialogNegativeClick(DialogFragment dialog) {
-        // Do Nothing
-    }
 }

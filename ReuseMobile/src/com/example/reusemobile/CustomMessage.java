@@ -1,12 +1,26 @@
 package com.example.reusemobile;
 
-import com.example.reusemobile.logging.Sting;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
+
+import android.app.Activity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,15 +28,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import com.example.reusemobile.logging.Sting;
 
 public class CustomMessage extends ActionBarActivity {
     private int itemId;
     private EditText customMessage;
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_message);
+        activity = this;
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -74,7 +93,9 @@ public class CustomMessage extends ActionBarActivity {
     }
     
     public void send(View view) {
-        //TODO add this feature to server
+        Sting.logButtonPush(this, Sting.SEND_CUSTOM_RESPONSE);
+        String message = customMessage.getText().toString();
+        (new SendMessage()).execute(String.valueOf(itemId), message);
     }
 
     /**
@@ -91,6 +112,59 @@ public class CustomMessage extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.fragment_custom_message,
                     container, false);
             return rootView;
+        }
+    }
+    
+    private class SendMessage extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+         // Create a new HttpClient and Post Header
+            String port = GlobalApplication.getServerPort();
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost("http://armadillo.xvm.mit.edu:" + port + "/api/thread/claim/");
+            String email = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("username", "");
+            httppost.addHeader("USERNAME", email);
+            String token = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("token", "");
+            httppost.addHeader("TOKEN", token);
+            String id = params[0];
+            String message = params[1];
+            try {
+                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+                nameValuePairs.add(new BasicNameValuePair("item_id", id.toString()));
+                nameValuePairs.add(new BasicNameValuePair("text", message));
+                nameValuePairs.add(new BasicNameValuePair("email", "false"));
+                httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+                // Execute HTTP Post Request
+                HttpResponse response = httpclient.execute(httppost);
+                
+                if(response.getStatusLine().getStatusCode() != 200) {
+                    Log.e("Item Details", String.valueOf(itemId));
+                    Sting.logError(activity, Sting.CLAIM_ERROR, response.getStatusLine().getReasonPhrase());
+                    return "An error occured in item claim:\n" + response.getStatusLine().getReasonPhrase();
+                }
+                boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
+                if(!wasSuccessful) {
+                    Sting.logError(activity, Sting.CLAIM_ERROR, "Item Already Claimed");
+                    return "Item claim failed:\nThe item was already claimed :'(";
+                }
+                
+                return null;
+            } catch (Exception e) {
+                Sting.logError(activity, Sting.CLAIM_ERROR, "Exception: " + e.getLocalizedMessage());
+                return "An exception occured during item claim:\n" + e.getLocalizedMessage();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            if(result == null) {
+                Toast.makeText(getApplicationContext(), "Message Sent!", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

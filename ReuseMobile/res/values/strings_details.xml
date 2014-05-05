@@ -3,8 +3,10 @@
 
     <string name="details_date_label">Date Posted: </string>
     <string name="details_loc_label">Location: </string>
-    <string name="details_claim_button">Claim It!</string>
+    <string name="details_sender_label">Original Poster: </string>
+    <string name="details_claim_button">Claim All Items</string>
+    <string name="details_email_sender">Email Sender</string>
     <string name="details_map_button">View on Map</string>
-    <string name="details_custom_message_button">Send Custom Response</string>
+    <string name="details_custom_message_button">Claim Some Items</string>
 
 </resources>

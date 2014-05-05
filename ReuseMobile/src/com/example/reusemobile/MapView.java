@@ -90,7 +90,7 @@ public class MapView extends ActionBarActivity  {
                 if(location != null) {
                     Marker marker = map.addMarker(new MarkerOptions()
                                        .title(item.name)
-                                       .snippet(item.description)
+                                       .snippet("Location: " + item.location)
                                        .position(location));
                     markerToItem.put(marker, item);
                 }
@@ -134,11 +134,7 @@ public class MapView extends ActionBarActivity  {
     
     private void displayItemDetails(Item item) {
         Intent intent = new Intent(this, ItemDetails.class);
-        intent.putExtra(MainStream.ITEM_NAME, item.name);
-        intent.putExtra(MainStream.ITEM_DESCRIPTION, item.description);
-        intent.putExtra(MainStream.ITEM_DATE, item.date.getTime());
-        intent.putExtra(MainStream.ITEM_LOCATION, item.location);
-        intent.putExtra(MainStream.ITEM_AVAILABLE, item.isAvailable);
+        intent.putExtra(MainStream.ITEM_ID, item.pk);
         startActivity(intent);
     }
 
