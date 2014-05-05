@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.example.reusemobile.logging.Sting;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -18,11 +16,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class ManageFilters extends ActionBarActivity implements ConfirmFilterDelete.ConfirmFilterDeleteListener {
+import com.example.reusemobile.logging.Sting;
+
+public class ManageFilters extends ActionBarActivity implements ConfirmFilterChange.ConfirmFilterDeleteListener {
     public ListView filtersList;
 
     @Override
@@ -33,16 +33,16 @@ public class ManageFilters extends ActionBarActivity implements ConfirmFilterDel
         filtersList = (ListView) findViewById(R.id.manage_filters_list);
         filtersList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, ManageFilters.getSortedFilters(this)));
         final Activity activity = this;
-        filtersList.setOnItemClickListener(new OnItemClickListener() {
-
+        filtersList.setOnItemLongClickListener(new OnItemLongClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view,
+            public boolean onItemLongClick(AdapterView<?> parent, View view,
                     int position, long id) {
                 Sting.logButtonPush(activity, Sting.TOUCH_FILTER_BUTTON);
                 String filter = (String) parent.getItemAtPosition(position);
                 String tags = getSharedPreferences(GlobalApplication.filterPreferences, Context.MODE_PRIVATE).getString(filter, "");
-                ConfirmFilterDelete confirm = ConfirmFilterDelete.newInstance(filter, tags);
-                confirm.show(getSupportFragmentManager(), "ConfirmFilterDelete");
+                ConfirmFilterChange confirm = ConfirmFilterChange.newInstance(filter, tags);
+                confirm.show(getSupportFragmentManager(), "ConfirmFilterChange");
+                return true;
             }
         });
     }
@@ -93,13 +93,22 @@ public class ManageFilters extends ActionBarActivity implements ConfirmFilterDel
     }
 
     @Override
-    public void onDialogPositiveClick(DialogFragment dialog, String filter) {
+    public void onEditClick(DialogFragment dialog, String filter, String tags) {
+        Sting.logButtonPush(this, Sting.EDIT_FILTER_BUTTON);
+        Intent intent = new Intent(this, EditFilter.class);
+        intent.putExtra("name", filter);
+        intent.putExtra("keywords", tags);
+        startActivity(intent);
+    }
+    
+    @Override
+    public void onDeleteClick(DialogFragment dialog, String filter) {
         Sting.logButtonPush(this, Sting.DELETE_FILTER_BUTTON);
         removeFilter(filter);
     }
 
     @Override
-    public void onDialogNegativeClick(DialogFragment dialog) {
+    public void onCancelClick(DialogFragment dialog) {
         // Do nothing
     }
     

@@ -14,7 +14,7 @@
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
     <!--
          The following two permissions are not required to use
-	     Google Maps Android API v2, but are recommended.
+	     Google Maps Android API v2, but are recommended.
     -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -60,8 +60,8 @@
         <activity
             android:name="com.example.reusemobile.MainStream"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop" >
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -78,8 +78,8 @@
         <activity
             android:name="com.example.reusemobile.ItemDetails"
             android:label="@string/title_activity_item_details"
-            android:screenOrientation="portrait"
-            android:parentActivityName="com.example.reusemobile.MainStream" >
+            android:parentActivityName="com.example.reusemobile.MainStream"
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.MainStream" />
@@ -95,8 +95,8 @@
         <activity
             android:name="com.example.reusemobile.ManageFilters"
             android:label="@string/title_activity_manage_filters"
-            android:screenOrientation="portrait"
-            android:parentActivityName="com.example.reusemobile.MainStream" >
+            android:parentActivityName="com.example.reusemobile.MainStream"
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.MainStream" />
@@ -104,8 +104,8 @@
         <activity
             android:name="com.example.reusemobile.AddFilter"
             android:label="@string/title_activity_add_filter"
-            android:screenOrientation="portrait"
-            android:parentActivityName="com.example.reusemobile.ManageFilters" >
+            android:parentActivityName="com.example.reusemobile.ManageFilters"
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.ManageFilters" />
@@ -113,16 +113,16 @@
         <activity
             android:name="com.example.reusemobile.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:screenOrientation="portrait"
-            android:parentActivityName="com.example.reusemobile.MainStream" >
+            android:parentActivityName="com.example.reusemobile.MainStream"
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.MainStream" />
         </activity>
         <activity
             android:name="com.example.reusemobile.CreateAccount"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_create_account" >
+            android:label="@string/title_activity_create_account"
+            android:screenOrientation="portrait" >
         </activity>
 
         <meta-data
@@ -132,21 +132,29 @@
         <activity
             android:name="com.example.reusemobile.MapView"
             android:label="@string/title_activity_map_view"
-            android:screenOrientation="portrait"
-            android:parentActivityName="com.example.reusemobile.MainStream" >
+            android:parentActivityName="com.example.reusemobile.MainStream"
+            android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.reusemobile.MainStream" />
         </activity>
         <activity
             android:name="com.example.reusemobile.CustomMessage"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_custom_message" >
+            android:label="@string/title_activity_custom_message"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name="com.example.reusemobile.EmailSender"
-            android:screenOrientation="portrait"
-            android:label="@string/title_activity_email_sender" >
+            android:label="@string/title_activity_email_sender"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name="com.example.reusemobile.EditFilter"
+            android:label="@string/title_activity_edit_filter"
+            android:parentActivityName="com.example.reusemobile.ManageFilters" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.reusemobile.ManageFilters" />
         </activity>
     </application>
 

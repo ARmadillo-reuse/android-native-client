@@ -28,5 +28,6 @@
     <string name="title_activity_map_view">Map</string>
     <string name="title_activity_custom_message">Claim Some Items</string>
     <string name="title_activity_email_sender">Email Sender</string>
+    <string name="title_activity_edit_filter">Edit Filter</string>
 
 </resources>

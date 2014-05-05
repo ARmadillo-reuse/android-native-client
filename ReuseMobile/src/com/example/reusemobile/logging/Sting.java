@@ -55,7 +55,9 @@ public class Sting {
     public static final String ADD_FILTER_BUTTON = "ADD_FILTER";
     public static final String TOUCH_FILTER_BUTTON = "TOUCH_FILTER";
     public static final String DELETE_FILTER_BUTTON = "DELETE_FILTER";
+    public static final String EDIT_FILTER_BUTTON = "EDIT_FILTER";
     public static final String CREATE_FILTER_BUTTON = "CREATE_FILTER";
+    public static final String SAVE_FILTER = "SAVE_FILTER_CHANGES";
     public static final String CLAIM_BUTTON = "CLAIM";
     public static final String POST_BUTTON = "POST";
     public static final String MAP_MARKER = "MAP_MARKER";
