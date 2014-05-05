@@ -38,6 +38,8 @@ public class Sting {
     public static final String CLAIM_ERROR = "CLAIM";
     public static final String POST_ERROR = "POST";
     public static final String PULL_ERROR = "PULL";
+    public static final String CUSTOM_RESPONSE_ERROR = "CUSTOM_RESPONSE";
+    public static final String EMAIL_ERROR = "EMAIL_ERROR";
     
     // Button Ids
     public static final String ACTION_MAP = "ACTION_MAP";
