@@ -121,11 +121,14 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        switch(item.getItemId()) {
+        case R.id.action_settings:
             return true;
-        }
-        if (id == R.id.action_map_view) {
+        // Respond to the action bar's Up/Home button
+        case android.R.id.home:
+            finish();
+            return true;
+        case R.id.action_map_view:
             Intent intent = new Intent(this, MapView.class);
             intent.putExtra(MainStream.ITEM_ID, itemId);
             Sting.logButtonPush(this, Sting.ACTION_MAP);
