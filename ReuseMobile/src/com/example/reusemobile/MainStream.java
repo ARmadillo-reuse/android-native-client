@@ -596,6 +596,8 @@ public class MainStream extends ActionBarActivity {
     private class PullRequest extends AsyncTask<Long, Void, String> {
         @Override
         protected String doInBackground(Long... params) {
+            refreshLayout.setRefreshing(true);
+            
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'+'HH:mm", Locale.ENGLISH);
             formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
             String lastUpdate = formatter.format(new Date(params[0]));
@@ -665,7 +667,7 @@ public class MainStream extends ActionBarActivity {
             super.onPostExecute(result);
             if(result == null) {
                 refreshItems();
-                if(refreshLayout.isRefreshing()) refreshLayout.setRefreshing(false);
+                refreshLayout.setRefreshing(false);
             } else {
                 if(GlobalApplication.isDebug()) Toast.makeText(appContext, result, Toast.LENGTH_SHORT).show();
             }
