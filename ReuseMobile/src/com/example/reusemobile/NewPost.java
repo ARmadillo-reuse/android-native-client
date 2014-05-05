@@ -25,6 +25,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +36,7 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
     private String description;
     private String location;
     private String tags;
+    private Button postButton;
     
     private Activity activity;
 
@@ -43,6 +45,7 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_post);
         activity = this;
+        postButton = (Button) findViewById(R.id.post_button);
     }
     
     @Override
@@ -150,6 +153,12 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
                 return "An exception occured during item claim:\n" + e.getLocalizedMessage();
             }
         }
+        
+        @Override
+        protected void onPreExecute() {
+            postButton.setText("Posting...");
+            postButton.setEnabled(false);
+        }
 
         @Override
         protected void onPostExecute(String result) {
@@ -160,6 +169,8 @@ public class NewPost extends ActionBarActivity implements ConfirmPost.ConfirmPos
                 startActivity(new Intent(getApplicationContext(), MainStream.class));
                 finish();
             } else {
+                postButton.setText("Post!");
+                postButton.setEnabled(true);
                 Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
             }
         }

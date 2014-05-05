@@ -23,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.SearchManager;
@@ -97,6 +98,7 @@ public class MainStream extends ActionBarActivity {
     public SwipeRefreshLayout refreshLayout;
     
     private static Context appContext;
+    private Activity activity;
     
     private String[] currentKeywords;
     private Timer timer = new Timer();
@@ -216,6 +218,7 @@ public class MainStream extends ActionBarActivity {
                                          R.color.mit_gray,
                                          R.color.mit_red,
                                          R.color.mit_gray);
+            activity = this;
         }
     }
     
@@ -399,7 +402,7 @@ public class MainStream extends ActionBarActivity {
         
         // No keywords
         if (keywords.length == 0) {
-            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).orderBy("date").toSql() + " DESC").executeMulti()) {
+            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).toSql() + " ORDER BY isAvailable DESC, date DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", "<b>" + item.name + "</b>");
                 //datum.put("description", item.description);
@@ -422,7 +425,7 @@ public class MainStream extends ActionBarActivity {
             whereQuery.append("description LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
             whereQuery.append("tags LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%') + " OR ");
             whereQuery.append("location LIKE " + TypeMapper.encodeValue(ORMDroidApplication.getDefaultDatabase(), '%' + keywords[keywords.length - 1] + '%'));
-            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).where(whereQuery.toString()).orderBy("date").toSql() + " DESC").executeMulti()) {
+            for (Item item : Entity.query(Item.class).sql(Entity.query(Item.class).where(whereQuery.toString()).toSql() + " ORDER BY isAvailable DESC, date DESC").executeMulti()) {
                 Map<String, Object> datum = new HashMap<String, Object>(3);
                 datum.put("name", "<b>" + item.name + "</b>");
                 //datum.put("description", item.description);
@@ -652,13 +655,13 @@ public class MainStream extends ActionBarActivity {
                     
                     return null;
                 } else {
-                    //Sting.logError((Activity) appContext, Sting.PULL_ERROR,
-                    //        String.valueOf(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
+                    Sting.logError(activity, Sting.PULL_ERROR,
+                            String.valueOf(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
                     Log.e("Pull Error", String.valueOf(response.getStatusLine().getStatusCode()) + response.getStatusLine().getReasonPhrase());
                     return "An Error occured in item pull:\n" + response.getStatusLine().getReasonPhrase();
                 }
             } catch (Exception e) {
-                //Sting.logError((Activity) appContext, Sting.PULL_ERROR, "Exception: " + e.getLocalizedMessage());
+                Sting.logError(activity, Sting.PULL_ERROR, "Exception: " + e.getLocalizedMessage());
                 Log.i("Exception", e.getLocalizedMessage());
                 return "An exception occured:\n" + e.getLocalizedMessage();
             }

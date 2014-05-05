@@ -188,9 +188,6 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
     private class SendClaim extends AsyncTask<Integer, Void, String> {
         @Override
         protected String doInBackground(Integer... params) {
-            claimButton.setText("Claiming...");
-            claimButton.setEnabled(false);
-            
          // Create a new HttpClient and Post Header
             String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
@@ -227,6 +224,13 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
                 Sting.logError(activity, Sting.CLAIM_ERROR, "Exception: " + e.getLocalizedMessage());
                 return "An exception occured during item claim:\n" + e.getLocalizedMessage();
             }
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            claimButton.setText("Claiming...");
+            claimButton.setEnabled(false);
+            claimSomeButton.setEnabled(false);
         }
 
         @Override

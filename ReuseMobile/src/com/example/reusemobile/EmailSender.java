@@ -98,7 +98,11 @@ public class EmailSender extends ActionBarActivity {
     public void send(View view) {
         Sting.logButtonPush(this, Sting.SEND_EMAIL);
         String message = emailMessage.getText().toString();
-        (new SendEmail()).execute(String.valueOf(itemId), message);
+        if (!message.equals("")) {
+            (new SendEmail()).execute(String.valueOf(itemId), message);
+        } else {
+            Toast.makeText(this, "You must compose a message for the sender.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -121,9 +125,6 @@ public class EmailSender extends ActionBarActivity {
     private class SendEmail extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
-            sendButton.setText("Sending...");
-            sendButton.setEnabled(false);
-            
          // Create a new HttpClient and Post Header
             String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
@@ -146,20 +147,26 @@ public class EmailSender extends ActionBarActivity {
                 
                 if(response.getStatusLine().getStatusCode() != 200) {
                     Log.e("Item Details", String.valueOf(itemId));
-                    Sting.logError(activity, Sting.CLAIM_ERROR, response.getStatusLine().getReasonPhrase());
-                    return "An error occured in item claim:\n" + response.getStatusLine().getReasonPhrase();
+                    Sting.logError(activity, Sting.EMAIL_ERROR, response.getStatusLine().getReasonPhrase());
+                    return "An error occured in sending the email:\n" + response.getStatusLine().getReasonPhrase();
                 }
                 boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
                 if(!wasSuccessful) {
-                    Sting.logError(activity, Sting.CLAIM_ERROR, "Item Already Claimed");
-                    return "Item claim failed:\nThe item was already claimed :'(";
+                    Sting.logError(activity, Sting.EMAIL_ERROR, "Item Already Claimed");
+                    return "An error occured in sending the email";
                 }
                 
                 return null;
             } catch (Exception e) {
-                Sting.logError(activity, Sting.CLAIM_ERROR, "Exception: " + e.getLocalizedMessage());
-                return "An exception occured during item claim:\n" + e.getLocalizedMessage();
+                Sting.logError(activity, Sting.EMAIL_ERROR, "Exception: " + e.getLocalizedMessage());
+                return "An exception occured during email:\n" + e.getLocalizedMessage();
             }
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            sendButton.setText("Sending...");
+            sendButton.setEnabled(false);
         }
 
         @Override

@@ -19,6 +19,7 @@ import com.example.reusemobile.model.Item;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -65,6 +66,13 @@ public class MapView extends ActionBarActivity  {
 
         map.setMyLocationEnabled(true);
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(mit, 14));
+        map.setOnMarkerClickListener(new OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Sting.logButtonPush(activity, Sting.MAP_MARKER);
+                return false;
+            }
+        });
         map.setOnInfoWindowClickListener(new OnInfoWindowClickListener() {
             
             @Override

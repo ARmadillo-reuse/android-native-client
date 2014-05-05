@@ -98,7 +98,11 @@ public class CustomMessage extends ActionBarActivity {
     public void send(View view) {
         Sting.logButtonPush(this, Sting.SEND_CUSTOM_RESPONSE);
         String message = customMessage.getText().toString();
-        (new SendMessage()).execute(String.valueOf(itemId), message);
+        if (!message.equals("")) {
+            (new SendMessage()).execute(String.valueOf(itemId), message);
+        } else {
+            Toast.makeText(this, "You must specify items to claim.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -121,9 +125,6 @@ public class CustomMessage extends ActionBarActivity {
     private class SendMessage extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
-            sendButton.setText("Sending...");
-            sendButton.setEnabled(false);
-            
          // Create a new HttpClient and Post Header
             String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
@@ -146,20 +147,26 @@ public class CustomMessage extends ActionBarActivity {
                 
                 if(response.getStatusLine().getStatusCode() != 200) {
                     Log.e("Item Details", String.valueOf(itemId));
-                    Sting.logError(activity, Sting.CLAIM_ERROR, response.getStatusLine().getReasonPhrase());
+                    Sting.logError(activity, Sting.CUSTOM_RESPONSE_ERROR, response.getStatusLine().getReasonPhrase());
                     return "An error occured in item claim:\n" + response.getStatusLine().getReasonPhrase();
                 }
                 boolean wasSuccessful = new JSONObject(EntityUtils.toString(response.getEntity())).getBoolean("success");
                 if(!wasSuccessful) {
-                    Sting.logError(activity, Sting.CLAIM_ERROR, "Item Already Claimed");
-                    return "Item claim failed:\nThe item was already claimed :'(";
+                    Sting.logError(activity, Sting.CUSTOM_RESPONSE_ERROR, "Item Already Claimed");
+                    return "Item claim failed";
                 }
                 
                 return null;
             } catch (Exception e) {
-                Sting.logError(activity, Sting.CLAIM_ERROR, "Exception: " + e.getLocalizedMessage());
+                Sting.logError(activity, Sting.CUSTOM_RESPONSE_ERROR, "Exception: " + e.getLocalizedMessage());
                 return "An exception occured during item claim:\n" + e.getLocalizedMessage();
             }
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            sendButton.setText("Sending...");
+            sendButton.setEnabled(false);
         }
 
         @Override
