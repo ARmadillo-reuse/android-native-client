@@ -188,6 +188,9 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
     private class SendClaim extends AsyncTask<Integer, Void, String> {
         @Override
         protected String doInBackground(Integer... params) {
+            claimButton.setText("Claiming...");
+            claimButton.setEnabled(false);
+            
          // Create a new HttpClient and Post Header
             String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
@@ -234,6 +237,7 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
                 claimButton.setText("Claimed");
                 Toast.makeText(getApplicationContext(), "Item Claimed", Toast.LENGTH_SHORT).show();
             } else {
+                claimButton.setText(getResources().getText(R.string.details_claim_button));
                 claimButton.setEnabled(true);
                 Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
             }
@@ -243,7 +247,6 @@ public class ItemDetails extends ActionBarActivity implements ConfirmClaim.Confi
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
-        claimButton.setEnabled(false);
         new SendClaim().execute(itemId);
     }
 

@@ -1,38 +1,44 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/RelativeLayout1"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/add_filter_details_container"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:layout_height="fill_parent" >
 
-    <EditText
-        android:id="@+id/new_filter_name"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/RelativeLayout1"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center_horizontal"
-        android:hint="Filter Name"
-        android:inputType="textCapWords" >
+        android:orientation="vertical" >
 
-        <requestFocus />
-    </EditText>
+        <EditText
+            android:id="@+id/new_filter_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center_horizontal"
+            android:hint="Filter Name"
+            android:inputType="textCapWords" >
 
-    <EditText
-        android:id="@+id/new_filter_keywords"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/new_filter_name"
-        android:layout_centerHorizontal="true"
-        android:layout_gravity="center_horizontal"
-        android:hint="Keywords (separate by spaces)" />
+            <requestFocus />
+        </EditText>
 
-    <Button
-        android:id="@+id/new_filter_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/new_filter_keywords"
-        android:layout_centerHorizontal="true"
-        android:onClick="create"
-        android:text="Create" />
+        <EditText
+            android:id="@+id/new_filter_keywords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/new_filter_name"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center_horizontal"
+            android:hint="Keywords (separate by spaces)" />
 
-</RelativeLayout>
+        <Button
+            android:id="@+id/new_filter_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/new_filter_keywords"
+            android:layout_centerHorizontal="true"
+            android:onClick="create"
+            android:text="Create" />
+    </RelativeLayout>
+
+</ScrollView>

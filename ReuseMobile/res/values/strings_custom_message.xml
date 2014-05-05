@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <string name="custom_message_title">Compose your response here:</string>
-    <string name="custom_message_hint">Example: "I'm only claiming&#8230;"</string>
-    <string name="custom_message_explain">Note: This message will be sent as a reply to the original Reuse email, not to the original poster.</string>
+    <string name="custom_message_title">Specify which items you will be claiming:</string>
+    <string name="custom_message_hint">Example: "Items X, Y and Z"</string>
+    <string name="custom_message_explain">Note: This message will be sent as a reply to the original Reuse email, not to the original poster.\nPlease only claim if you have already physically obtained the item.</string>
     <string name="custom_message_send_button">Send!</string>
 
 </resources>

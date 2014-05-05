@@ -60,6 +60,7 @@
         <activity
             android:name="com.example.reusemobile.MainStream"
             android:label="@string/app_name"
+            android:screenOrientation="portrait"
             android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -77,6 +78,7 @@
         <activity
             android:name="com.example.reusemobile.ItemDetails"
             android:label="@string/title_activity_item_details"
+            android:screenOrientation="portrait"
             android:parentActivityName="com.example.reusemobile.MainStream" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -93,6 +95,7 @@
         <activity
             android:name="com.example.reusemobile.ManageFilters"
             android:label="@string/title_activity_manage_filters"
+            android:screenOrientation="portrait"
             android:parentActivityName="com.example.reusemobile.MainStream" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -101,6 +104,7 @@
         <activity
             android:name="com.example.reusemobile.AddFilter"
             android:label="@string/title_activity_add_filter"
+            android:screenOrientation="portrait"
             android:parentActivityName="com.example.reusemobile.ManageFilters" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -109,6 +113,7 @@
         <activity
             android:name="com.example.reusemobile.SettingsActivity"
             android:label="@string/title_activity_settings"
+            android:screenOrientation="portrait"
             android:parentActivityName="com.example.reusemobile.MainStream" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -116,6 +121,7 @@
         </activity>
         <activity
             android:name="com.example.reusemobile.CreateAccount"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_create_account" >
         </activity>
 
@@ -126,6 +132,7 @@
         <activity
             android:name="com.example.reusemobile.MapView"
             android:label="@string/title_activity_map_view"
+            android:screenOrientation="portrait"
             android:parentActivityName="com.example.reusemobile.MainStream" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -133,10 +140,12 @@
         </activity>
         <activity
             android:name="com.example.reusemobile.CustomMessage"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_custom_message" >
         </activity>
         <activity
             android:name="com.example.reusemobile.EmailSender"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_email_sender" >
         </activity>
     </application>

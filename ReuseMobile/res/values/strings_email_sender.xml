@@ -3,6 +3,7 @@
     
     <string name="email_title">Compose your email here:</string>
     <string name="email_hint">Example: "I'm only claiming&#8230;"</string>
+        <string name="email_explain">Note: This message will be sent directly to the original poster, not to the Reuse community.</string>
     <string name="email_send_button">Send!</string>
 
 </resources>

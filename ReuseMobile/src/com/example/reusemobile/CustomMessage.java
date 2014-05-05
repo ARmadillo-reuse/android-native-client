@@ -27,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ public class CustomMessage extends ActionBarActivity {
     private int itemId;
     private EditText customMessage;
     private Activity activity;
+    private Button sendButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +53,7 @@ public class CustomMessage extends ActionBarActivity {
         Intent intent = getIntent();
         itemId = intent.getIntExtra(MainStream.ITEM_ID, -1);
         customMessage = (EditText) findViewById(R.id.custom_message);
+        sendButton = (Button) findViewById(R.id.send_custom_message_button);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
     
@@ -118,6 +121,9 @@ public class CustomMessage extends ActionBarActivity {
     private class SendMessage extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
+            sendButton.setText("Sending...");
+            sendButton.setEnabled(false);
+            
          // Create a new HttpClient and Post Header
             String port = GlobalApplication.getServerPort();
             HttpClient httpclient = new DefaultHttpClient();
@@ -163,6 +169,8 @@ public class CustomMessage extends ActionBarActivity {
                 Toast.makeText(getApplicationContext(), "Message Sent!", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
+                sendButton.setText(getResources().getText(R.string.custom_message_send_button));
+                sendButton.setEnabled(true);
                 Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
             }
         }
