@@ -34,6 +34,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -51,6 +52,7 @@ public class CreateAccount extends ActionBarActivity {
     GoogleCloudMessaging gcm;
     AtomicInteger msgId = new AtomicInteger();
     String regid;
+    private Button signUpButton;
 
 
     @Override
@@ -62,6 +64,8 @@ public class CreateAccount extends ActionBarActivity {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment()).commit();
         }
+        
+        signUpButton = (Button) findViewById(R.id.create_account_button);
         
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("isVerified", false)) {
             login();
@@ -285,24 +289,24 @@ public class CreateAccount extends ActionBarActivity {
                 return "Exception: " + e.getLocalizedMessage();
             }
         }
+        
+        @Override
+        protected void onPreExecute() {
+            signUpButton.setText("Signing up...");
+            signUpButton.setEnabled(false);
+        }
 
         @Override
         protected void onPostExecute(String result) {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
             if(result.equals("Successful")) {
+                signUpButton.setText("Check your email");
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("username", email).commit();
-//                if(email.equals("crogers3@mit.edu")) {
-//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "64919ef302e63945b80b171e0ca2ec2c46b889ae301e5491a66b0831").commit();
-//                } else if(email.equals("shaladi@mit.edu")) {
-//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "abdcb57ca3fb20f73e4d7c4546a43ce869b1217a368864ffec86ae82").commit();
-//                } else if(email.equals("manting@mit.edu")) {
-//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "079646d723d12daaba4449789bd7ba8021c26953dcc09d5c017eed7f").commit();
-//                } else if(email.equals("akonradi@mit.edu")) {
-//                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("token", "1831ef98490487f93463bbdfb81bb8a0ee483a38ad6c79a05f10b69b").commit();
-//                }
                 Toast.makeText(getApplicationContext(), "Verification email sent. Please check your email to verify your account", Toast.LENGTH_LONG).show();
             } else {
+                signUpButton.setText("Sign up");
+                signUpButton.setEnabled(true);
                 Toast.makeText(getApplicationContext(), "An Error occured in login:\n" + result, Toast.LENGTH_LONG).show();
             }
         }
